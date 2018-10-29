@@ -1,0 +1,62 @@
+Subject,Hand,Gender,TimeOrder,TimeAxis,TimeRepresentation,TimeConsistent,TimeDirection,TimeQuadrant,QuantityOrder,QuantityAxis,QuantityRepresentation,QuantityConsistent,QuantityDirection,QuantityQuadrant,ValenceOrder,ValenceAxis,ValenceRepresentation,ValenceConsistent,ValenceDirection,ValenceQuadrant,OverallConsistent
+1,Right,Female,3,Yes,Diagonal,Yes,Up-left to down-right,"Up-left, down-right",2,Yes,Vertical,Yes,Down to up,n/a,1,Yes,Vertical,Yes,Down to up,n/a,No
+2,Right,Male,2,No,Other / primarily horizontal,No,n/a,Up-left ,1,No,Other / primarily horizontal,No,n/a,Up-left,3,No,Other ,n/a,n/a,Up-left,No
+3,Right,Male,2,Yes,Horizontal,Yes,Left to right,n/a,1,Yes,Vertical,Yes,Down to up,n/a,3,Yes,Vertical,Yes,Down to up,n/a,No
+4,Right,Female,1,Yes,Vertical,Yes,Up to down,"Up-left, down-left",3,Yes,Vertical,No,n/a,"Up-left, down-left",2,No,Other / no pattern,n/a,n/a,"Up-left, down-left",No
+5,Right,Male,2,Yes,Horizontal,Yes,Left to right,n/a,1,Yes,Horizontal,Yes,Left to right,n/a,3,Yes,Horizontal,Yes,Left to right,n/a,Yes
+6,Right,Female,1,Yes,Vertical,No,n/a,n/a,3,Yes,Vertical,No,n/a,n/a,2,Yes,Vertical,No,n/a,n/a,Yes
+7,Right,Female,3,No,Other / primarily horizontal,No,n/a,"Up-left, up-right",1,Yes,Vertical,Yes,Down to up,"Up-left, down-right",2,No,Other / primarily horizontal,n/a,n/a,"Up-left, up-right",No
+8,Right,Female,3,Yes,Vertical,No,n/a,Up-left,2,Yes,Vertical,No,n/a,Up-left,1,Yes,Vertical,No,n/a,Up-left,Yes
+9,Left,Male,1,No,Other / no pattern,n/a,n/a,"Up-left, down-left, down-right",3,No,Other / no pattern,n/a,n/a,"Up-left, down-left",2,No,Other / no pattern,Yes,Down to up,n/a,No
+10,Right,Female,2,Yes,Vertical,Yes,Up to down,n/a,1,Yes,Vertical,Yes,Down to up,"Up-left, down-left",3,No,Other / primarily vertical,Yes,Down to up,"Up-left, up-right, down-left",No
+11,Right,Female,2,Yes,Vertical,No,n/a,Up-left,3,Yes,Horizontal,Yes,Left to right,n/a,1,Yes,Vertical,Yes,Down to up,Up-right,No
+12,Right,Female,1,No,Other / no pattern,n/a,n/a,Up-left,2,No,Other / primarily horizontal,No,n/a,"Up-left, down-left",3,No,Other / primarily horizontal,No,Down to up,n/a,No
+13,Right,Male,1,Yes,Vertical,Yes,Down to up,n/a,2,Yes,Vertical,Yes,Down to up,n/a,3,Yes,Vertical,Yes,Down to up,n/a,Yes
+14,Right,Male,3,Yes,Horizontal,Yes,Left to right,n/a,1,No,Other / no pattern,n/a,n/a,"Up-right, down-left, down-right",2,Yes,Horizontal,Yes,Left to right,n/a,No
+15,Right,Female,1,Yes,Horizontal,Yes,Right to left,Up-left,2,Yes,Vertical,Yes,Down to up,n/a,3,Yes,Vertical,Yes,Down to up,n/a,No
+16,Right,Male,1,Yes,Vertical,Yes,Down to up,"Up-left, down-left",3,Yes,Vertical,Yes,Down to up,"Up-left, down-left",2,Yes,Vertical,Yes,Down to up,"Up-left, down-left",Yes
+17,Right,Male,3,Yes,Vertical,No,n/a,n/a,2,Yes,Vertical,Yes,Down to up,"Up-left, down-left",1,Yes,Vertical,No,n/a,"Up-left, down-left",Yes
+18,Right,Male,2,Yes,Vertical,No,n/a,Up-left,1,Yes,Vertical,No,n/a,Up-left,3,Yes,Vertical,No,n/a,Up-left,Yes
+19,Right,Male,3,Yes,Horizontal,Yes,Left to right,n/a,1,Yes,Vertical,Yes,Down to up,n/a,2,Yes,Vertical,Yes,Down to up,n/a,No
+20,Left,Male,2,No,Other / no pattern,n/a,n/a,"Up-left, up-right",3,No,Other / no pattern,n/a,n/a,"Up-left, up-right",1,No,Other / no pattern,n/a,n/a,"Up-left, up-right",No
+21,Right,Male,2,No,Other / primarily vertical,No,n/a,"Up-left, down-right",1,Yes,Horizontal,Yes,Left to right,n/a,3,Yes,Vertical,Yes,Down to up,"Up-left, down-left",No
+22,Right,Male,3,Yes,Horizontal,Yes,Right to left,"Up-left, up-right",1,Yes,Horizontal,Yes,Right to left,"Up-left, up-right",2,Yes,Horizontal,Yes,Left to right,"Up-left, up-right",Yes
+23,Left,Female,2,Yes,Horizontal,Yes,Left to right,n/a,1,Yes,Vertical,No,n/a,"Up-left, down-left",3,Yes,Vertical,No,n/a,"Up-left, down-left",No
+24,Right,Female,3,No,Other / no pattern,n/a,n/a,Up-left,1,No,Other / no pattern,n/a,n/a,Up-left,2,No,Other / no pattern,n/a,n/a,Up-left,No
+25,Left,Female,2,Yes,Horizontal,Yes,Left to right,n/a,3,Yes,Vertical,Yes,Down to up,n/a,1,Yes,Diagonal,Yes,Down-left to up-right,"Up-right, down-left",No
+26,Right,Female,3,Yes,Horizontal,Yes,Left to right,n/a,2,Yes,Vertical,Yes,Down to up,n/a,1,Yes,Vertical,Yes,Down to up,n/a,No
+27,Right,Male,3,Yes,Vertical,Yes,Down to up,n/a,1,No,Other / primarily horizontal,No,n/a,"Down-left, down-right",2,No,Other / no pattern,n/a,n/a,"Up-left, down-right",No
+28,Left,Male,2,No,Other / no pattern,n/a,n/a,"Up-left, up-right, down-right",1,No,Other / no pattern,n/a,n/a,"Up-left, down-right",3,No,Other / no pattern,n/a,n/a,"Up-left, down-right",No
+29,Right,Male,3,No,Other / no pattern,n/a,n/a,Up-left,1,No,Other / no pattern,n/a,n/a,"Up-left, up-right",2,No,Other / primarily horizontal,No,n/a,"Up-left, up-right",No
+30,Right,Female,3,No,Other / primarily horizontal,No,n/a,"Up-left, up-right",2,No,Other / primarily horizontal,No,n/a,"Up-left, up-right",1,No,Other / primarily horizontal,No,n/a,"Up-left, up-right",No
+31,Right,Female,1,No,Other / no pattern,n/a,n/a,"Up-left, down-left, down-right",3,No,Other / primarily vertical,Yes,Down to up,"Up-left, down-left",2,No,Other / primarily vertical,Yes,Down to up,"Up-left, down-right",No
+32,Right,Female,3,Yes,Horizontal,No,n/a,"Up-left, up-right",1,Yes,Horizontal,No,n/a,"Up-left, up-right",2,Yes,Horizontal,No,n/a,"Up-left, up-right",Yes
+33,Right,Female,1,Yes,Horizontal,Yes,Left to right,"Up-left, up-right",2,Yes,Horizontal,Yes,Left to right,"Up-left, up-right",3,Yes,Horizontal,No,n/a,"Up-left, up-right",Yes
+34,Right,Male,3,Yes,Horizontal,Yes,Left to right,n/a,1,Yes,Diagonal,Yes,Down-left to up-right,"Up-right, down-left",2,Yes,Diagonal,Yes,Down-left to up-right,"Up-right, down-left",No
+35,Right,Female,2,Yes,Horizontal,Yes,Left to right,n/a,1,Yes,Vertical,Yes,Down to up,"Up-left, down-left",3,Yes,Vertical,Yes,Down to up,n/a,No
+36,Right,Male,1,Yes,Horizontal,Yes,Left to right,n/a,2,Yes,Vertical,Yes,Down to up,n/a,3,Yes,Diagonal,Yes,Down-left to up-right,"Up-right, down-left",No
+37,Right,Female,1,Yes,Horizontal,Yes,Left to right,"Up-left, up-right",3,Yes,Horizontal,Yes,Right to left,"Up-left, up-right",2,Yes,Horizontal,Yes,Left to right,"Up-left, up-right",Yes
+38,Right,Female,2,Yes,Horizontal,Yes,Left to right,n/a,1,Yes,Vertical,Yes,Down to up,n/a,3,No,Other / primarily horizontal,No,n/a,"Up-left, up-right",No
+39,Right,Female,1,Yes,Diagonal,Yes,Down-left to up-right,"Up-right, down-left",3,Yes,Diagonal,Yes,Down-left to up-right,"Up-right, down-left ",2,Yes,Diagonal,No,n/a,"Up-right, down-left",Yes
+40,Right,Female,3,Yes,Vertical,No,n/a,n/a,1,Yes,Vertical,No,n/a,n/a,2,Yes,Vertical,No,n/a,n/a,Yes
+41,Right,Female,1,Yes,Horizontal,Yes,Left to right,n/a,2,Yes,Vertical,Yes,Down to up,"Up-right, up-left",3,Yes,Horizontal,Yes,Left to right,n/a,No
+42,Left,Female,1,No,Other / no pattern,n/a,n/a,"Up-left, down-left, up-right, down-right",4,Yes,Horizontal,No,n/a,n/a,3,No,Other / no pattern,n/a,n/a,"Up-left, down-left, up-right, down-right",No
+43,Right,Male,1,Yes,Horizontal,Yes,Left to right,Up-left ,3,Yes,Horizontal,Yes,Left to right,Up-left ,2,Yes,Horizontal,Yes,Left to right,Up-left ,Yes
+44,Right,Female,4,Yes,Horizontal,Yes,Left to right,"Down-left, down-right",3,Yes,Horizontal,Yes,Left to right,n/a,2,Yes,Horizontal,Yes,Left to right,n/a,Yes
+45,Right,Male,4,Yes,Vertical,Yes,Down to up,Up-left ,2,Yes,Vertical,No,n/a,Up-left,3,Yes,Vertical,Yes,Up to down,Up-left,No
+46,Left,Male,3,No,Other / no pattern,n/a,n/a,"Up-left, down-right",1,Yes,Diagonal,No,n/a,"Up-right, down-left",2,No,Other / no pattern,n/a,n/a,"Up-right, down-left",No
+47,Right,Female,2,No,Other / no pattern,n/a,n/a,"Up-left, up-right, down-left",3,No,Other / no pattern,n/a,n/a,"Up-left, down-left",1,No,Other / no pattern,n/a,n/a,"Up-left, up-right, down-left",No
+48,Left,Male,1,No,Other / no pattern,n/a,n/a,"Up-left, down-left, up-right, down-right",3,Yes,Diagonal,No,n/a,"Up-right, down-left",2,Yes,Diagonal,Yes,Up-left to down-right,"Up-left, down-right",No
+49,Right,Female,2,Yes,Horizontal,No,n/a,"Up-left, up-right",3,Yes,Horizontal,No,n/a,"Up-right, up-left",4,Yes,Horizontal,No,n/a,n/a,No
+50,Right,Female,1,Yes,Diagonal,Yes,Up-right to down-left,"Up-left, down-left",4,Yes,Horizontal,Yes,Left to right,n/a,1,Yes,Diagonal,No,n/a,"Up-right, down-left",No
+51,Right,Male,3,Yes,Vertical,No,n/a,Up-left ,1,Yes,Vertical,Yes,Up to down,Up-left,2,Yes,Vertical,No,n/a,Up-left,Yes
+52,Left,Male,1,No,Other / no pattern,n/a,n/a,"Up-left, down-left, up-right, down-right",2,No,Other / no pattern,n/a,n/a,"Up-left, up-right, down-left, down-right",3,No,Other / no pattern,n/a,n/a,"Up-left, down-left, up-right, down-right",No
+53,Right,Female,3,No,Other / no pattern,n/a,n/a,"Up-left, up-right, down-left",2,Yes,Vertical,Yes,Down to up,n/a,4,Yes,Horizontal,Yes,Left to right,n/a,No
+54,Left,Male,4,No,Other / primarily vertical,No,n/a,n/a,1,No,Other / primarily vertical,No,n/a,n/a,3,No,Other / primarily vertical,No,n/a,n/a,No
+55,Right,Female,2,Yes,Horizontal,Yes,Left to right,n/a,4,Yes,Diagonal,Yes,Down-left to up-right,"Down-left, up-right",1,No,Other / no pattern,n/a,n/a,"Down-left, down-right",No
+56,Right,Male,1,Yes,Horizontal,Yes,Left to right,n/a,2,Yes,Vertical,Yes,Down to up,n/a,4,Yes,Vertical,Yes,Down to up,n/a,No
+57,Right,Male,1,Yes,Horizontal,Yes,Left to right,n/a,3,Yes,Horizontal,Yes,Left to right,n/a,4,Yes,Horizontal,Yes,Left to right,n/a,Yes
+58,Right,Female,1,Yes,Vertical,Yes,Up to down,Up-left ,4,Yes,Vertical,Yes,Down to up ,Up-left ,1,Yes,Vertical,Yes,Down to up,Up-left ,Yes
+59,Right,Male,3,Yes,Horizontal,Yes,Left to right,n/a,1,Yes,Horizontal,Yes,Left to right,n/a,4,Yes,Horizontal,Yes,Left to right,n/a,Yes
+60,Right,Female,2,No,Other / primarily horizontal,No,n/a,n/a,1,No,Other / no pattern,n/a,n/a,"Up-left, down-left, down-right",3,Yes,Vertical,No,n/a,n/a,No
+61,Right,Female,2,Yes,Vertical,Yes,Up to down,n/a,1,Yes,Vertical,Yes,Down to up,n/a,3,Yes,Vertical,Yes,Down to up,n/a,Yes

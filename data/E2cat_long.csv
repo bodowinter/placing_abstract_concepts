@@ -1,0 +1,184 @@
+Subject,Hand,Gender,Condition,ConsistentAxis,AxisChoice,AxisChoiceDetailed,DirectionDetailed,Horizontal,Vertical
+1,Right,Female,Time,Yes,diagonal,diagonal,up-left to down-right,left-to-right,up-to-down
+1,Right,Female,Quantity,Yes,vertical,vertical,down to up,NA,down-to-up
+1,Right,Female,Valence,Yes,vertical,vertical,down to up,NA,down-to-up
+2,Right,Male,Time,No,horizontal,other / primarily horizontal,NA,NA,NA
+2,Right,Male,Quantity,No,horizontal,other / primarily horizontal,NA,NA,NA
+2,Right,Male,Valence,No,NA,other,NA,NA,NA
+3,Right,Male,Time,Yes,horizontal,horizontal,left to right,left-to-right,NA
+3,Right,Male,Quantity,Yes,vertical,vertical,down to up,NA,down-to-up
+3,Right,Male,Valence,Yes,vertical,vertical,down to up,NA,down-to-up
+4,Right,Female,Time,Yes,vertical,vertical,up to down,NA,up-to-down
+4,Right,Female,Quantity,Yes,vertical,vertical,NA,NA,NA
+4,Right,Female,Valence,No,NA,other / no pattern,NA,NA,NA
+5,Right,Male,Time,Yes,horizontal,horizontal,left to right,left-to-right,NA
+5,Right,Male,Quantity,Yes,horizontal,horizontal,left to right,left-to-right,NA
+5,Right,Male,Valence,Yes,horizontal,horizontal,left to right,left-to-right,NA
+6,Right,Female,Time,Yes,vertical,vertical,NA,NA,NA
+6,Right,Female,Quantity,Yes,vertical,vertical,NA,NA,NA
+6,Right,Female,Valence,Yes,vertical,vertical,NA,NA,NA
+7,Right,Female,Time,No,horizontal,other / primarily horizontal,NA,NA,NA
+7,Right,Female,Quantity,Yes,vertical,vertical,down to up,NA,down-to-up
+7,Right,Female,Valence,No,horizontal,other / primarily horizontal,NA,NA,NA
+8,Right,Female,Time,Yes,vertical,vertical,NA,NA,NA
+8,Right,Female,Quantity,Yes,vertical,vertical,NA,NA,NA
+8,Right,Female,Valence,Yes,vertical,vertical,NA,NA,NA
+9,Left,Male,Time,No,NA,other / no pattern,NA,NA,NA
+9,Left,Male,Quantity,No,NA,other / no pattern,NA,NA,NA
+9,Left,Male,Valence,No,NA,other / no pattern,down to up,NA,down-to-up
+10,Right,Female,Time,Yes,vertical,vertical,up to down,NA,up-to-down
+10,Right,Female,Quantity,Yes,vertical,vertical,down to up,NA,down-to-up
+10,Right,Female,Valence,No,vertical,other / primarily vertical,down to up,NA,down-to-up
+11,Right,Female,Time,Yes,vertical,vertical,NA,NA,NA
+11,Right,Female,Quantity,Yes,horizontal,horizontal,left to right,left-to-right,NA
+11,Right,Female,Valence,Yes,vertical,vertical,down to up,NA,down-to-up
+12,Right,Female,Time,No,NA,other / no pattern,NA,NA,NA
+12,Right,Female,Quantity,No,horizontal,other / primarily horizontal,NA,NA,NA
+12,Right,Female,Valence,No,horizontal,other / primarily horizontal,down to up,NA,down-to-up
+13,Right,Male,Time,Yes,vertical,vertical,down to up,NA,down-to-up
+13,Right,Male,Quantity,Yes,vertical,vertical,down to up,NA,down-to-up
+13,Right,Male,Valence,Yes,vertical,vertical,down to up,NA,down-to-up
+14,Right,Male,Time,Yes,horizontal,horizontal,left to right,left-to-right,NA
+14,Right,Male,Quantity,No,NA,other / no pattern,NA,NA,NA
+14,Right,Male,Valence,Yes,horizontal,horizontal,left to right,left-to-right,NA
+15,Right,Female,Time,Yes,horizontal,horizontal,right to left,right-to-left,NA
+15,Right,Female,Quantity,Yes,vertical,vertical,down to up,NA,down-to-up
+15,Right,Female,Valence,Yes,vertical,vertical,down to up,NA,down-to-up
+16,Right,Male,Time,Yes,vertical,vertical,down to up,NA,down-to-up
+16,Right,Male,Quantity,Yes,vertical,vertical,down to up,NA,down-to-up
+16,Right,Male,Valence,Yes,vertical,vertical,down to up,NA,down-to-up
+17,Right,Male,Time,Yes,vertical,vertical,NA,NA,NA
+17,Right,Male,Quantity,Yes,vertical,vertical,down to up,NA,down-to-up
+17,Right,Male,Valence,Yes,vertical,vertical,NA,NA,NA
+18,Right,Male,Time,Yes,vertical,vertical,NA,NA,NA
+18,Right,Male,Quantity,Yes,vertical,vertical,NA,NA,NA
+18,Right,Male,Valence,Yes,vertical,vertical,NA,NA,NA
+19,Right,Male,Time,Yes,horizontal,horizontal,left to right,left-to-right,NA
+19,Right,Male,Quantity,Yes,vertical,vertical,down to up,NA,down-to-up
+19,Right,Male,Valence,Yes,vertical,vertical,down to up,NA,down-to-up
+20,Left,Male,Time,No,NA,other / no pattern,NA,NA,NA
+20,Left,Male,Quantity,No,NA,other / no pattern,NA,NA,NA
+20,Left,Male,Valence,No,NA,other / no pattern,NA,NA,NA
+21,Right,Male,Time,No,vertical,other / primarily vertical,NA,NA,NA
+21,Right,Male,Quantity,Yes,horizontal,horizontal,left to right,left-to-right,NA
+21,Right,Male,Valence,Yes,vertical,vertical,down to up,NA,down-to-up
+22,Right,Male,Time,Yes,horizontal,horizontal,right to left,right-to-left,NA
+22,Right,Male,Quantity,Yes,horizontal,horizontal,right to left,right-to-left,NA
+22,Right,Male,Valence,Yes,horizontal,horizontal,left to right,left-to-right,NA
+23,Left,Female,Time,Yes,horizontal,horizontal,left to right,left-to-right,NA
+23,Left,Female,Quantity,Yes,vertical,vertical,NA,NA,NA
+23,Left,Female,Valence,Yes,vertical,vertical,NA,NA,NA
+24,Right,Female,Time,No,NA,other / no pattern,NA,NA,NA
+24,Right,Female,Quantity,No,NA,other / no pattern,NA,NA,NA
+24,Right,Female,Valence,No,NA,other / no pattern,NA,NA,NA
+25,Left,Female,Time,Yes,horizontal,horizontal,left to right,left-to-right,NA
+25,Left,Female,Quantity,Yes,vertical,vertical,down to up,NA,down-to-up
+25,Left,Female,Valence,Yes,diagonal,diagonal,down-left to up-right,left-to-right,down-to-up
+26,Right,Female,Time,Yes,horizontal,horizontal,left to right,left-to-right,NA
+26,Right,Female,Quantity,Yes,vertical,vertical,down to up,NA,down-to-up
+26,Right,Female,Valence,Yes,vertical,vertical,down to up,NA,down-to-up
+27,Right,Male,Time,Yes,vertical,vertical,down to up,NA,down-to-up
+27,Right,Male,Quantity,No,horizontal,other / primarily horizontal,NA,NA,NA
+27,Right,Male,Valence,No,NA,other / no pattern,NA,NA,NA
+28,Left,Male,Time,No,NA,other / no pattern,NA,NA,NA
+28,Left,Male,Quantity,No,NA,other / no pattern,NA,NA,NA
+28,Left,Male,Valence,No,NA,other / no pattern,NA,NA,NA
+29,Right,Male,Time,No,NA,other / no pattern,NA,NA,NA
+29,Right,Male,Quantity,No,NA,other / no pattern,NA,NA,NA
+29,Right,Male,Valence,No,horizontal,other / primarily horizontal,NA,NA,NA
+30,Right,Female,Time,No,horizontal,other / primarily horizontal,NA,NA,NA
+30,Right,Female,Quantity,No,horizontal,other / primarily horizontal,NA,NA,NA
+30,Right,Female,Valence,No,horizontal,other / primarily horizontal,NA,NA,NA
+31,Right,Female,Time,No,NA,other / no pattern,NA,NA,NA
+31,Right,Female,Quantity,No,vertical,other / primarily vertical,down to up,NA,down-to-up
+31,Right,Female,Valence,No,vertical,other / primarily vertical,down to up,NA,down-to-up
+32,Right,Female,Time,Yes,horizontal,horizontal,NA,NA,NA
+32,Right,Female,Quantity,Yes,horizontal,horizontal,NA,NA,NA
+32,Right,Female,Valence,Yes,horizontal,horizontal,NA,NA,NA
+33,Right,Female,Time,Yes,horizontal,horizontal,left to right,left-to-right,NA
+33,Right,Female,Quantity,Yes,horizontal,horizontal,left to right,left-to-right,NA
+33,Right,Female,Valence,Yes,horizontal,horizontal,NA,NA,NA
+34,Right,Male,Time,Yes,horizontal,horizontal,left to right,left-to-right,NA
+34,Right,Male,Quantity,Yes,diagonal,diagonal,down-left to up-right,left-to-right,down-to-up
+34,Right,Male,Valence,Yes,diagonal,diagonal,down-left to up-right,left-to-right,down-to-up
+35,Right,Female,Time,Yes,horizontal,horizontal,left to right,left-to-right,NA
+35,Right,Female,Quantity,Yes,vertical,vertical,down to up,NA,down-to-up
+35,Right,Female,Valence,Yes,vertical,vertical,down to up,NA,down-to-up
+36,Right,Male,Time,Yes,horizontal,horizontal,left to right,left-to-right,NA
+36,Right,Male,Quantity,Yes,vertical,vertical,down to up,NA,down-to-up
+36,Right,Male,Valence,Yes,diagonal,diagonal,down-left to up-right,left-to-right,down-to-up
+37,Right,Female,Time,Yes,horizontal,horizontal,left to right,left-to-right,NA
+37,Right,Female,Quantity,Yes,horizontal,horizontal,right to left,right-to-left,NA
+37,Right,Female,Valence,Yes,horizontal,horizontal,left to right,left-to-right,NA
+38,Right,Female,Time,Yes,horizontal,horizontal,left to right,left-to-right,NA
+38,Right,Female,Quantity,Yes,vertical,vertical,down to up,NA,down-to-up
+38,Right,Female,Valence,No,horizontal,other / primarily horizontal,NA,NA,NA
+39,Right,Female,Time,Yes,diagonal,diagonal,down-left to up-right,left-to-right,down-to-up
+39,Right,Female,Quantity,Yes,diagonal,diagonal,down-left to up-right,left-to-right,down-to-up
+39,Right,Female,Valence,Yes,diagonal,diagonal,NA,NA,NA
+40,Right,Female,Time,Yes,vertical,vertical,NA,NA,NA
+40,Right,Female,Quantity,Yes,vertical,vertical,NA,NA,NA
+40,Right,Female,Valence,Yes,vertical,vertical,NA,NA,NA
+41,Right,Female,Time,Yes,horizontal,horizontal,left to right,left-to-right,NA
+41,Right,Female,Quantity,Yes,vertical,vertical,down to up,NA,down-to-up
+41,Right,Female,Valence,Yes,horizontal,horizontal,left to right,left-to-right,NA
+42,Left,Female,Time,No,NA,other / no pattern,NA,NA,NA
+42,Left,Female,Quantity,Yes,horizontal,horizontal,NA,NA,NA
+42,Left,Female,Valence,No,NA,other / no pattern,NA,NA,NA
+43,Right,Male,Time,Yes,horizontal,horizontal,left to right,left-to-right,NA
+43,Right,Male,Quantity,Yes,horizontal,horizontal,left to right,left-to-right,NA
+43,Right,Male,Valence,Yes,horizontal,horizontal,left to right,left-to-right,NA
+44,Right,Female,Time,Yes,horizontal,horizontal,left to right,left-to-right,NA
+44,Right,Female,Quantity,Yes,horizontal,horizontal,left to right,left-to-right,NA
+44,Right,Female,Valence,Yes,horizontal,horizontal,left to right,left-to-right,NA
+45,Right,Male,Time,Yes,vertical,vertical,down to up,NA,down-to-up
+45,Right,Male,Quantity,Yes,vertical,vertical,NA,NA,NA
+45,Right,Male,Valence,Yes,vertical,vertical,up to down,NA,up-to-down
+46,Left,Male,Time,No,NA,other / no pattern,NA,NA,NA
+46,Left,Male,Quantity,Yes,diagonal,diagonal,NA,NA,NA
+46,Left,Male,Valence,No,NA,other / no pattern,NA,NA,NA
+47,Right,Female,Time,No,NA,other / no pattern,NA,NA,NA
+47,Right,Female,Quantity,No,NA,other / no pattern,NA,NA,NA
+47,Right,Female,Valence,No,NA,other / no pattern,NA,NA,NA
+48,Left,Male,Time,No,NA,other / no pattern,NA,NA,NA
+48,Left,Male,Quantity,Yes,diagonal,diagonal,NA,NA,NA
+48,Left,Male,Valence,Yes,diagonal,diagonal,up-left to down-right,left-to-right,up-to-down
+49,Right,Female,Time,Yes,horizontal,horizontal,NA,NA,NA
+49,Right,Female,Quantity,Yes,horizontal,horizontal,NA,NA,NA
+49,Right,Female,Valence,Yes,horizontal,horizontal,NA,NA,NA
+50,Right,Female,Time,Yes,diagonal,diagonal,up-right to down-left,NA,NA
+50,Right,Female,Quantity,Yes,horizontal,horizontal,left to right,left-to-right,NA
+50,Right,Female,Valence,Yes,diagonal,diagonal,NA,NA,NA
+51,Right,Male,Time,Yes,vertical,vertical,NA,NA,NA
+51,Right,Male,Quantity,Yes,vertical,vertical,up to down,NA,up-to-down
+51,Right,Male,Valence,Yes,vertical,vertical,NA,NA,NA
+52,Left,Male,Time,No,NA,other / no pattern,NA,NA,NA
+52,Left,Male,Quantity,No,NA,other / no pattern,NA,NA,NA
+52,Left,Male,Valence,No,NA,other / no pattern,NA,NA,NA
+53,Right,Female,Time,No,NA,other / no pattern,NA,NA,NA
+53,Right,Female,Quantity,Yes,vertical,vertical,down to up,NA,down-to-up
+53,Right,Female,Valence,Yes,horizontal,horizontal,left to right,left-to-right,NA
+54,Left,Male,Time,No,vertical,other / primarily vertical,NA,NA,NA
+54,Left,Male,Quantity,No,vertical,other / primarily vertical,NA,NA,NA
+54,Left,Male,Valence,No,vertical,other / primarily vertical,NA,NA,NA
+55,Right,Female,Time,Yes,horizontal,horizontal,left to right,left-to-right,NA
+55,Right,Female,Quantity,Yes,diagonal,diagonal,down-left to up-right,left-to-right,down-to-up
+55,Right,Female,Valence,No,NA,other / no pattern,NA,NA,NA
+56,Right,Male,Time,Yes,horizontal,horizontal,left to right,left-to-right,NA
+56,Right,Male,Quantity,Yes,vertical,vertical,down to up,NA,down-to-up
+56,Right,Male,Valence,Yes,vertical,vertical,down to up,NA,down-to-up
+57,Right,Male,Time,Yes,horizontal,horizontal,left to right,left-to-right,NA
+57,Right,Male,Quantity,Yes,horizontal,horizontal,left to right,left-to-right,NA
+57,Right,Male,Valence,Yes,horizontal,horizontal,left to right,left-to-right,NA
+58,Right,Female,Time,Yes,vertical,vertical,up to down,NA,up-to-down
+58,Right,Female,Quantity,Yes,vertical,vertical,down to up,NA,down-to-up
+58,Right,Female,Valence,Yes,vertical,vertical,down to up,NA,down-to-up
+59,Right,Male,Time,Yes,horizontal,horizontal,left to right,left-to-right,NA
+59,Right,Male,Quantity,Yes,horizontal,horizontal,left to right,left-to-right,NA
+59,Right,Male,Valence,Yes,horizontal,horizontal,left to right,left-to-right,NA
+60,Right,Female,Time,No,horizontal,other / primarily horizontal,NA,NA,NA
+60,Right,Female,Quantity,No,NA,other / no pattern,NA,NA,NA
+60,Right,Female,Valence,Yes,vertical,vertical,NA,NA,NA
+61,Right,Female,Time,Yes,vertical,vertical,up to down,NA,up-to-down
+61,Right,Female,Quantity,Yes,vertical,vertical,down to up,NA,down-to-up
+61,Right,Female,Valence,Yes,vertical,vertical,down to up,NA,down-to-up

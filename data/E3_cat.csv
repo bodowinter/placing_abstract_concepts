@@ -1,0 +1,42 @@
+Subject,Hand,Gender,Order,Axis,Representation,Consistency,Direction,Quadrants
+31A,Left,Male,NA,No,Other / no pattern,n/a,n/a,"Up-left, down-left, up-right, down-right"
+32A,Right,Male,NA,Yes,Horizontal,Yes,Left to right,n/a
+33A,Right,Male,NA,Yes,Diagonal,Yes,Down-left to up-right,"Down-left, up-right"
+34A,Left,Male,NA,Yes,Horizontal,Yes,Left to right,n/a
+35A,Right,Female,NA,No,Other / no pattern,n/a,n/a,"Up-left, down-left, up-right, down-right"
+36A,Right,Female,NA,No,Other / no pattern,n/a,n/a,"Up-left, down-left, up-right, down-right"
+37A,Right,Male,NA,Yes,Horizontal,Yes,Left to right,Down-left 
+38A,Right,Female,NA,No,Other / no pattern,n/a,n/a,"Up-left, down-left, up-right, down-right"
+39A,Right,Female,NA,Yes,Horizontal,Yes,Left to right,n/a
+40A,Right,Male,NA,Yes,Horizontal,Yes,Left to right,"Down-left, down-right"
+41A,Right,Male,NA,No,Other / no pattern,n/a,n/a,"Up-left, up-right, down-right"
+42A,Left,Female,NA,Yes,Horizontal,Yes,n/a,n/a
+43A,Right,Female,NA,Yes,Horizontal,Yes,Left to right,n/a
+44A,Left,Male,NA,No,Other / no pattern,n/a,n/a,"Up-left, up-right "
+45A,Right,Male,NA,No,Other / no pattern,n/a,n/a,"Up-left, up-right "
+46A,Right,Female,NA,Yes,Horizontal,Yes,Left to right,n/a
+47A,Right,Male,NA,Yes,Horizontal,Yes,Left to right,n/a
+48A,Right,Male,NA,Yes,Horizontal,Yes,Left to right,n/a
+49A,Right,Male,NA,Yes,Horizontal,No,n/a,Up-left 
+50A,Right,Female,NA,Yes,Horizontal,Yes,Left to right,"Up-left, up-right "
+41B,Right,Female,4,Yes,Horizontal,Yes,Left to right,n/a
+42B,Left,Female,2,Yes,Horizontal,Yes,Left to right,n/a
+43B,Right,Male,4,Yes,Horizontal,Yes,Left to right,Up-left 
+44B,Right,Female,1,Yes,Horizontal,Yes,Left to right,Down-left 
+45B,Right,Male,1,Yes,Horizontal,Yes,Left to right,Up-left 
+46B,Left,Male,4,No,Other / no pattern,n/a,n/a,Up-left 
+47B,Right,Female,4,No,Other / no pattern,n/a,n/a,"Up-left, up-right "
+48B,Left,Male,4,Yes,Horizontal,Yes,Left to right,Down-right
+49B,Right,Female,1,No,Other / no pattern,n/a,n/a,"Up-left, down-left, up-right, down-right"
+50B,Right,Female,3,Yes,Diagonal,Yes,Down-left to up-right,"Up-left, up-right "
+51B,Right,Male,4,Yes,Vertical,No,n/a,Up-left
+52B,Left,Male,4,Yes,Vertical,Yes,Down to up,n/a
+53B,Right,Female,1,Yes,Horizontal,Yes,Left to right,n/a
+54B,Left,Male,2,Yes,Vertical,Yes,Down to up,n/a
+55B,Right,Female,3,Yes,Horizontal,Yes,Left to right,"Down-left, down-right"
+56B,Right,Male,3,Yes,Horizontal,Yes,Left to right,n/a
+57B,Right,Male,4,Yes,Horizontal,Yes,Left to right,n/a
+58B,Right,Female,3,Yes,Vertical,Yes,Up to down,"Up-left, down-left "
+59B,Right,Male,2,Yes,Horizontal,Yes,Left to right,n/a
+60B,Right,Female,4,Yes,Horizontal,Yes,Left to right,n/a
+61B,Right,Female,4,Yes,Vertical,Yes,Up to down,n/a
