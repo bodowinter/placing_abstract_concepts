@@ -1,0 +1,549 @@
+---
+title: "Preprocessing Experiment 2 data"
+author: "Bodo Winter & Greg Woodin"
+date: "13/10/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Continuous analysis of Experiment 2
+
+This is the categorical analysis of Experiment 2. Start loading packages, function file and data:
+
+```{r libraries, message = FALSE}
+
+library(tidyverse)	# for data processing
+library(stringr)	# for data processing
+library(lme4)	# for mixed models
+library(afex)	# for mixed models
+library(lsr)    # for calculating Cramer's V 
+
+source('../scripts/functions.R')
+source('../scripts/predict.glmm.R')
+
+E2l <- read_csv("../data/E2_long.csv")
+E2l %>% print(n = 6, width = Inf)
+```
+
+Preliminary data wrangling:
+
+```{r wrangle}
+
+# Centre and Z-score by participant:
+all_subs <- unique(E2l$Subject)
+E2l$x_c <- NA
+E2l$y_c <- NA
+E2l$x_z <- NA
+E2l$y_z <- NA
+for (i in all_subs) {
+  df <- filter(E2l, Subject == i)
+  
+  # Center:
+	E2l[E2l$Subject == i, ]$x_c <- df$x - mean(df$x)
+	E2l[E2l$Subject == i, ]$y_c <- df$y - mean(df$y)
+
+	# Standardize:
+	E2l[E2l$Subject == i, ]$x_z <- (df$x - mean(df$x)) / sd(df$x)
+	E2l[E2l$Subject == i, ]$y_z <- (df$y - mean(df$y))	/ sd(df$y)
+}
+
+# Add a numerical identifier for earliest/least/worst = 1 etc.:
+E2l$Polarity <- rep(1:4, 3 * 61)
+E2l <- mutate(E2l,
+              Polarity_c = Polarity - mean(Polarity),
+              Polarity_ord = as.ordered(Polarity))
+
+# Create a factor for consistent plotting:
+mylevs <- c('Time', 'Quantity', 'Valence')
+E2l <- mutate(E2l,
+              Cond_fac = factor(Condition,
+                                levels = mylevs))
+
+```
+
+## Analysis of range (measure of axis use)
+
+Construct range aggregate data frame:
+
+```{r range_agr_create}
+range_agr <- E2l %>%
+  group_by(Subject, Cond_fac) %>%
+  summarize(min_x = min(x), max_x = max(x),
+            min_y = min(y), max_y = max(y))
+range_agr <- mutate(range_agr,
+                    x_diff = max_x - min_x,
+                    y_diff = max_y - min_y)
+```
+
+Look at x- and y-axis spread of markings for each task:
+
+```{r x_y_averages}
+range_agr %>% group_by(Cond_fac) %>%
+	summarize(xrange = mean(x_diff),
+		yrange = mean(y_diff))
+```
+
+Make into long format for double plot:
+
+```{r make_range_long}
+range_long <- range_agr %>%
+  select(-min_x, -max_x, -min_y, -max_y) %>%
+  gather(key = Axis,
+         value = Range, -Subject, -Cond_fac)
+```
+
+Make a public-ready boxplot of the ranges:
+
+```{r range_plot, fig.width = 8, fig.height = 4}
+# Box values to be plotted:
+
+x_box <- boxplot(x_diff ~ Cond_fac,
+                 data = range_agr, plot = FALSE)
+y_box <- boxplot(y_diff ~ Cond_fac,
+                 data = range_agr, plot = FALSE)
+
+# Plotting parameters:
+
+xfac <- 0.1
+mycols <- c('steelblue4', 'indianred4', 'goldenrod3')
+
+# The actual plot:
+
+quartz('', 9, 4)
+par(mai = c(0.75, 1.5, 0.5, 0.5))
+emptyplot(xlim = c(0, 8), ylim = c(0, 400))
+axis(side = 2, at = seq(0, 400, 100),
+	font = 2, las = 2, cex.axis = 1.35, lwd = 2)
+mtext(text = 'Range (mm)', side = 2, line = 3.8,
+	font = 2, cex = 1.75)
+axis(side = 1, at = seq(0.5, 2.5, 1),
+	labels = c('Time', 'Quantity', 'Valence'),
+	font = 2, cex.axis = 1, line = -1.5, tick = FALSE)
+axis(side = 1, at = c(1.5, 5.5),
+	labels = c('x-axis', 'y-axis'),
+	font = 2, cex.axis = 1.5, line = 0.5, tick = FALSE)
+for (i in 1:3) {
+	rect(xleft = i - 1 + xfac, xright = i - xfac,
+		ybottom = x_box$stats[2, i],
+		ytop = x_box$stats[4, i],
+		col = mycols[i])
+	segments(x0 = i - 1 + xfac + 0.05, x1 = i - xfac - 0.05,
+		y0 = x_box$stats[3, i], lwd = 2)
+	segments(x0 = seq(0.5, 2.5, 1)[i],
+		y0 = x_box$stats[4, i],
+		y1 = x_box$stats[5, i])
+	segments(x0 = seq(0.5, 2.5, 1)[i],
+		y1 = x_box$stats[2, i],
+		y0 = x_box$stats[1, i])
+	}
+axis(side = 1, at = seq(0.5, 2.5, 1) + 4,
+	labels = c('Time', 'Quantity', 'Valence'),
+	font = 2, cex.axis = 1, line = -1.5, tick = FALSE)
+for (i in 1:3) {
+	rect(xleft = i - 1 + xfac + 4, xright = i - xfac + 4,
+		ybottom = y_box$stats[2, i],
+		ytop = y_box$stats[4, i],
+		col = mycols[i])
+	segments(x0 = i - 1 + xfac + 0.05 + 4, x1 = i - xfac - 0.05 + 4,
+		y0 = y_box$stats[3, i], lwd = 2)		
+	segments(x0 = seq(0.5, 2.5, 1)[i] + 4,
+		y0 = y_box$stats[4, i],
+		y1 = y_box$stats[5, i])
+	segments(x0 = seq(0.5, 2.5, 1)[i] + 4,
+		y1 = y_box$stats[2, i],
+		y0 = y_box$stats[1, i])
+	}
+```
+
+## Linear mixed effects model analysis:
+
+Separate models:
+
+```{r models}
+# Likelihood ratio test for x-axis model:
+
+mixed(x_diff ~ Cond_fac + (1|Subject),
+      data = range_agr, REML = FALSE, method = 'LRT')
+summary(x_mdl <- lmer(x_diff ~ Cond_fac +
+                        (1|Subject),
+                      data = range_agr, REML = FALSE))
+
+# Likelihood ratio test for y-axis model:
+
+mixed(y_diff ~ Cond_fac + (1|Subject),
+      data = range_agr, REML = FALSE, method = 'LRT')
+summary(y_mdl <- lmer(y_diff ~ Cond_fac +
+                        (1|Subject),
+                      data = range_agr, REML = FALSE))
+```
+
+Combined model testing the interaction:
+
+```{r model_interact}
+summary(all_mdl <- lmer(Range ~ Cond_fac * Axis + (1|Subject),
+	data = range_long, REML = FALSE))
+mixed(Range ~ Cond_fac * Axis + (1 + Axis|Subject),
+	data = range_long, REML = FALSE, method = 'LRT')
+```
+
+Get predictions:
+
+```{r get_preds}
+source('../scripts/predict.glmm.R')
+all_types <- unique(range_long$Cond_fac)
+all_axis <- unique(range_long$Axis)
+newdata <- expand.grid(all_types, all_axis) %>%
+  rename(Cond_fac = Var1, Axis = Var2) %>%
+  arrange(Cond_fac)
+predict.glmm(all_mdl, newdata = newdata) %>%
+  mutate(Range = round(Range))
+```
+
+## Categorical analysis
+
+Load the categorical data:
+
+```{r load_cat_data}
+E2 <- read_csv("../data/E2cat_long.csv")
+E2 %>% print(n = 6, width = Inf)
+
+E2_short <- read_csv("../data/E2_cat.csv")
+E2_short %>% print(n = 6, width = Inf)
+```
+
+Preliminary data wrangling:
+
+```{r wrangle_cat}
+
+# Recode AxisChoice as 'other' and AxisChoiceDetailed as ‘other / no pattern’ if DirectionDetailed == NA:
+E2[is.na(E2$DirectionDetailed), ]$AxisChoice <- 'other'
+E2[is.na(E2$DirectionDetailed), ]$AxisChoiceDetailed <- 'other / no pattern'
+
+# Find out number of participants:
+print(ntot <- length(unique(E2$Subject)))
+
+# Change NAs in AxisChoice to 'other':
+E2[is.na(E2$AxisChoice), ]$AxisChoice <- 'other'
+
+```
+
+## Axis Consistency
+
+Find out how many participants used an axis to structure their response:
+
+```{r axis}
+
+E2 <- mutate(E2,
+	DominantOrientation = ifelse(AxisChoice == 'other', 'none', 'some'))
+table(E2$DominantOrientation)
+prop.table(table(E2$DominantOrientation))
+
+```
+
+Look at consistent axis choice across tasks:
+
+```{r axis_task}
+
+# Descriptive stats:
+E2 %>% group_by(Condition, DominantOrientation) %>% count() %>%
+	mutate(Proportion = n / ntot,
+		Percentage = Proportion * 100)
+
+# Perform a Chi-square test on this:
+E2_tab <- with(E2, table(Condition, DominantOrientation))
+chisq.test(E2_tab)
+cramersV(E2_tab)	# small = 0.1, medium = 0.3, large = 0.8
+
+```
+
+Look at how many different axis choices participants made across the three tasks:
+
+```{r axis_subject}
+
+per_p <- apply(select(E2_short, TimeRepresentation, QuantityRepresentation, ValenceRepresentation), 1, table)
+E2_short$N_axes <- sapply(per_p, length)
+print(per_p <- table(E2_short$N_axes))
+prop.table(per_p) * 100
+
+```
+
+# Dominant Orientation
+
+Find numbers and percentages of people who responded horizontally, vertically or diagonally for quantity, time and valence tasks:
+
+```{r axis_choice}
+
+# Re-order categorical variables:
+E2 <- mutate(E2,
+	Condition_fac = factor(Condition, levels = c('Quantity', 'Time', 'Valence')),
+	AxisChoice_fac = factor(AxisChoice,
+		levels = c('horizontal', 'vertical', 'diagonal', 'other')))
+
+# Descriptive stats:
+E2_xtab <- with(E2, table(Condition, AxisChoice))
+(E2_xtab <- E2_xtab[, colnames(E2_xtab) != 'other'])
+prop.table(E2_xtab, 1) * 100
+colnames(E2_xtab) <- c('Diagonal', 'Horizontal', 'Vertical')	# capitalize
+E2_xtab <- E2_xtab[, c('Horizontal', 'Vertical', 'Diagonal')]	# re-order
+E2_xtab <- E2_xtab[c('Time', 'Quantity', 'Valence'), ]
+
+```
+
+Perform a Chi-square test on this and get Pearson's standardised residuals and Cramer's V:
+
+```{r inferential}
+
+print(E2_chisq <- chisq.test(E2_xtab))	# violates independence
+E2_chisq$stdres	# violates independence
+cramersV(E2_xtab)	# small = 0.1, medium = 0.3, large = 0.8
+
+```
+
+Calculate Shannon entropy:
+
+```{r entropy}
+(entropies <- round(apply(E2_xtab, MARGIN = 1, FUN = entropy), 2))
+
+```
+
+## Sanity checks for independence violation
+
+Run loop with random sample of data points from unique participants 1000 times:
+
+```{r for_loop}
+
+nsim <- 1000
+xchisq <- numeric(nsim)
+
+alltabs <- vector('list', length = nsim)
+
+E2sub <- filter(E2, AxisChoice != 'other')
+
+set.seed(42)
+for (i in 1:nsim) {
+  
+  # Shuffle participants:
+  
+  xshuffled <- sample_n(E2sub, size = nrow(E2sub))
+  
+  # Get rid of duplicates:
+  
+  xshuffled <- filter(xshuffled,
+                      !duplicated(Subject))
+	
+  xdata <- table(xshuffled$Condition,
+                 xshuffled$AxisChoice)
+	if (any(is.na(xdata))) xdata[is.na(xdata)] <- 0
+	alltabs[[i]] <- xdata
+
+	# Save the Chisquare value:
+	suppressWarnings(this_chisq <- chisq.test(xdata))
+	xchisq[i] <- this_chisq$statistic
+	
+	# Notify:
+	if (i %% 100 == 0) cat(paste0(i, '\n'))
+	}
+
+# Significance threshold for df = 4 and a = 0.05:
+chisq_crit <- qchisq(0.05, 4, lower.tail = FALSE)
+sum(xchisq < chisq_crit)
+sum(1 - pchisq(xchisq, df = 4) > 0.05)	# check
+mean(xchisq)
+1 - pchisq(mean(xchisq), df = 4)	# significance of average Chi-Square value
+
+```
+
+The mean Chi-Square value is below the mean.
+
+To double-check, perform a logistic mixed model of horizontal versus vertical:
+
+```{r logistic}
+
+E2_nodiag <- filter(E2, AxisChoice %in% c('horizontal', 'vertical'))
+E2_nodiag <- mutate(E2_nodiag,
+                    AxisChoice = factor(AxisChoice))
+
+mymdl <- glmer(AxisChoice ~ Condition + (1|Subject),
+	data = E2_nodiag, family = 'binomial')
+
+summary(mymdl)
+
+mixed(AxisChoice ~ Condition + (1|Subject),
+	data = E2_nodiag, family = 'binomial', method = 'LRT')
+
+```
+
+## Single versus double axis
+
+Compare single-axis versus diagonal responses:
+
+```{r continuity}
+
+E2_diag_vs_no <- matrix(c(E2_xtab[, 'Horizontal'] + E2_xtab[, 'Vertical'],
+	E2_xtab[, 'Diagonal']), nrow = 3, byrow = FALSE)
+colSums(E2_diag_vs_no)
+prop.table(colSums(E2_diag_vs_no)) * 100
+binom.test(colSums(E2_diag_vs_no))
+
+```
+
+Plot data:
+
+```{r plot, fig.width = 10, fig.height = 4}
+
+# Create subsidiary tables for plotting and transpose tables for easy looping:
+E2_prop <- prop.table(E2_xtab, 1)
+E2_percents <- t(apply(round(E2_prop * 100, 0),
+	FUN = function(x) str_c(x, '%'), MARGIN = 1))
+E2_stdres <- round(E2_chisq$stdres, 1)
+
+# Plotting parameters:
+xfac <- 0.1
+yfac <- 4.5
+yfac2 <- 1.6
+yfac_bottom <- 2
+mycols <- c('steelblue4', 'indianred4', 'goldenrod3')
+mylabs <- c('Horizontal', 'Vertical', 'Diagonal')
+
+# Make a nice publication-ready plot of this:
+quartz('', 11, 4)
+par(mai = c(1, 1.5, 0.5, 0.5))
+emptyplot(xlim = c(0, 11), ylim = c(0, 40))
+axis(side = 2, at = seq(0, 40, 10),
+	font = 2, las = 2, cex.axis = 1.5, lwd = 2)
+mtext(text = 'Count', side = 2, line = 3.8,
+	font = 2, cex = 2)
+axis(side = 1, at = c(2, 6, 10) - 0.5,
+	labels = c('Quantity', 'Time', 'Valence'),
+	font = 2, cex.axis = 1.5, line = 0.5, tick = FALSE)
+axis(side = 1, at = 2 - 0.5,
+	labels = bquote(italic('H')==.(entropies[1])),
+	font = 2, cex.axis = 1.20, line = 1.9, tick = FALSE)
+axis(side = 1, at = 6 - 0.5,
+	labels = bquote(italic('H')==.(entropies[2])),
+	font = 2, cex.axis = 1.2, line = 1.9, tick = FALSE)
+axis(side = 1, at = 10 - 0.5,
+	labels = bquote(italic('H')==.(entropies[3])),
+	font = 2, cex.axis = 1.2, line = 1.9, tick = FALSE)
+
+# Quantity bars:
+for (i in 1:3) {
+	rect(xleft = i - 1 + xfac + 4, xright = i - xfac + 4,
+		ybottom = 0, ytop = E2_xtab[1, i],
+		col = mycols[i], border = NA)
+	text(x = i - 0.5 + 4, y = E2_xtab[1, i] + yfac,
+		labels = E2_percents[1, i],
+		font = 2)
+	
+	# Fix stdres values for presentation:
+	this_stdres <- E2_stdres[1, i]
+	stdres_display <- this_stdres
+	if (this_stdres %% 1 == 0) {
+		stdres_display <- str_c(stdres_display, '.0')
+	}
+	if (this_stdres > 0) {
+		stdres_display <- str_c('+', as.character(stdres_display))
+	}
+	text(x = i - 0.5 + 4, y = E2_xtab[1, i] + yfac2,
+		labels = bquote(italic('r')==.(stdres_display)),
+		font = 2, cex = 0.9)
+	text(x = i - 0.5 + 4, y = 0 - yfac_bottom,
+		labels = mylabs[i], adj = c(0.5, 0.5),
+		font = 2, cex = 0.9, xpd = NA)
+}
+
+# Time bars:
+for (i in 1:3) {
+	rect(xleft = i - 1 + xfac, xright = i - xfac,
+		ybottom = 0, ytop = E2_xtab[2, i],
+		col = mycols[i], border = NA)
+	text(x = i - 0.5, y = E2_xtab[2, i] + yfac,
+		labels = E2_percents[2, i],
+		font = 2)
+	
+	# Fix stdres values for presentation:
+	this_stdres <- E2_stdres[2, i]
+	stdres_display <- this_stdres
+	if (this_stdres %% 1 == 0) {
+		stdres_display <- str_c(stdres_display, '.0')
+	}
+	if (this_stdres > 0) {
+		stdres_display <- str_c('+', as.character(stdres_display))
+	}
+	text(x = i - 0.5, y = E2_xtab[2, i] + yfac2,
+		labels = bquote(italic('r')==.(stdres_display)),
+		font = 2, cex = 0.9)
+	text(x = i - 0.5, y = 0 - yfac_bottom,
+		labels = mylabs[i], adj = c(0.5, 0.5),
+		font = 2, cex = 0.9, xpd = NA)
+}
+
+# Valence bars:
+for (i in 1:3) {
+	rect(xleft = i - 1 + xfac + 8, xright = i - xfac + 8,
+		ybottom = 0, ytop = E2_xtab[3, i],
+		col = mycols[i], border = NA)
+	text(x = i - 0.5 + 8, y = E2_xtab[3, i] + yfac,
+		labels = E2_percents[3, i],
+		font = 2)
+	
+	# Fix stdres values for presentation:
+	this_stdres <- E2_stdres[3, i]
+	stdres_display <- this_stdres
+	if (this_stdres %% 1 == 0) {
+		stdres_display <- str_c(stdres_display, '.0')
+	}
+	if (this_stdres > 0) {
+		stdres_display <- str_c('+', as.character(stdres_display))
+	}
+	text(x = i - 0.5 + 8, y = E2_xtab[3, i] + yfac2,
+		labels = bquote(italic('r')==.(stdres_display)),
+		font = 2, cex = 0.9)
+	text(x = i - 0.5 + 8, y = 0 - yfac_bottom,
+		labels = mylabs[i], adj = c(0.5, 0.5),
+		font = 2, cex = 0.9, xpd = NA)
+	}
+
+
+```
+
+## Dominant Direction
+
+Find out how many participants responded from left-to-right, up-to-down etc. 
+
+```{r direction}
+
+# Horizontal (Table 3):
+print(E2_hor_tab <- with(E2, table(Condition_fac, Horizontal)))
+print(E2_hor_props <- prop.table(E2_hor_tab, 1) * 100) 
+E2_hor_props <- as.data.frame(E2_hor_props) %>% rename(Proportion = Freq)
+
+# Entropy of horizontal direction across task:
+
+apply(E2_hor_tab, 1, entropy)
+
+# Vertical (Table 3):
+print(E2_ver_tab <- with(E2, table(Condition_fac, Vertical)))
+print(E2_ver_props <- prop.table(E2_ver_tab, 1) * 100) 
+E2_ver_props <- as.data.frame(E2_ver_props) %>% rename(Proportion = Freq)
+
+# Entropy of vertical direction across task:
+
+apply(E2_ver_tab, 1, entropy)
+
+# Diagonal (Table 4):
+E2l_diag <- filter(E2, AxisChoiceDetailed == 'diagonal')
+print(E2_diagonal_horz <- with(E2l_diag, table(Condition, Horizontal)))
+print(E2_diagonal_vert <- with(E2l_diag, table(Condition, Vertical)))
+prop.table(E2_diagonal_horz, 1) * 100
+prop.table(E2_diagonal_vert, 1) * 100
+
+# Entropy of vertical direction across task:
+
+apply(E2_ver_tab, 1, entropy)
+
+```
+

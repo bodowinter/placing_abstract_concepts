@@ -1,0 +1,338 @@
+---
+title: "Preprocessing Experiment 1 data"
+author: "Bodo Winter & Greg Woodin"
+date: "03/10/2018 - 10/10/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Analysis of Experiment 1
+
+This is the analysis of Experiment 1. Start loading packages, function file and data:
+
+```{r libraries, message = FALSE}
+
+library(tidyverse)	# for data processing
+library(stringr)	# for data processing
+library(lme4)	# for mixed models
+library(afex)	# for mixed models
+library(MuMIn)	# for mixed models
+library(lsr)    # for calculating Cramer's V 
+
+source('../scripts/functions.R')
+
+E1 <- read_csv("../data/E1.csv")    
+E1 %>% print(n = 6, width = Inf)
+
+E1l <- read_csv('../data/E1_long.csv')    # long
+E1l %>% print(n = 6, width = Inf)
+
+```
+
+Label horizontal and vertical directions of diagonal responses:
+
+```{r diag_dir}
+
+# Diagonal1: down-left to up-right
+# Diagonal1Reverse: up-right to down-left
+# Diagonal2: up-left to down-right
+# Diagonal2Reverse: down-right to up-left
+
+# Horizontal direction
+E1l$HorizontalDiag <- E1l$Horizontal
+E1l[E1l$ResponseDirection %in% c('Diagonal1', 'Diagonal2'), ]$HorizontalDiag <- 'left-to-right'
+E1l[E1l$ResponseDirection %in% c('Diagonal1Reverse', 'Diagonal2Reverse'), ]$HorizontalDiag <- 'right-to-left'
+
+# Vertical direction:
+E1l$VerticalDiag <- E1l$Vertical
+E1l[E1l$ResponseDirection %in% c('Diagonal1Reverse', 'Diagonal2'), ]$VerticalDiag <- 'down-to-up'
+E1l[E1l$ResponseDirection %in% c('Diagonal2Reverse', 'Diagonal2'), ]$VerticalDiag <- 'up-to-down'
+```
+
+# Dominant Orientation
+
+Find numbers and percentages of people who responded horizontally, vertically or diagonally for quantity, time and valence tasks:
+
+```{r axis_choice}
+
+# Re-order categorical variables:
+E1l <- mutate(E1l,
+	Condition = factor(Condition, levels = c('Quantity', 'Time', 'Valence')),
+	AxisChoice = factor(ResponseAxis,	levels = c('Horizontal', 'Vertical', 'Diagonal')))
+
+# Descriptive stats:
+E1l %>% group_by(Condition, AxisChoice) %>% count() %>%
+	mutate(Percentage = round(n / 50, 2) * 100)
+
+```
+
+Perform a Chi-square test on this and get Pearson's standardised residuals and Cramer's V:
+
+```{r inferential}
+
+E1_xtab <- with(E1l, table(Condition, AxisChoice))
+print(E1_chisq <- chisq.test(E1_xtab))	# violates independence
+E1_chisq$stdres	# violates independence
+cramersV(E1_xtab)	# small = 0.1, medium = 0.3, large = 0.8
+
+```
+
+Run loop with random sample of data points from unique participants 1000 times:
+
+```{r for_loop}
+
+nsim <- 1000
+xchisq <- numeric(nsim)
+cols <- c('QuantityAxis', 'TimeAxis', 'ValenceAxis')
+
+alltabs <- vector('list', length = nsim)
+
+set.seed(42)
+for (i in 1:nsim) {
+  
+	# Assign empty vectors with names of columns:
+	assign(cols[1], vector(mode = 'numeric', length = 0))
+	assign(cols[2], vector(mode = 'numeric', length = 0))
+	assign(cols[3], vector(mode = 'numeric', length = 0))
+	
+	# Loop through participants and select one data point each:
+	for (j in 1:50) {
+		this_task <- sample(cols, 1)
+		assign(this_task,
+			c(get(this_task),
+				pull(E1[j, ], this_task)))
+		}
+
+	# Tabulate this:
+	QuantityAxis <- as_tibble(table(QuantityAxis))
+	TimeAxis <- as_tibble(table(TimeAxis))
+	ValenceAxis <- as_tibble(table(ValenceAxis))
+
+	# Join the table:
+	xdata <- full_join(ValenceAxis, QuantityAxis, by = c('ValenceAxis' = 'QuantityAxis'))
+	xdata <- full_join(xdata, TimeAxis, by = c('ValenceAxis' = 'TimeAxis'))
+	
+	# Extract matrix:
+	xdata <- as.matrix(xdata[, 2:4])
+	if (any(is.na(xdata))) xdata[is.na(xdata)] <- 0
+	alltabs[[i]] <- xdata
+
+	# Save the Chisquare value:
+	suppressWarnings(this_chisq <- chisq.test(xdata))
+	xchisq[i] <- this_chisq$statistic
+	
+	# Notify:
+	if (i %% 100 == 0) cat(paste0(i, '\n'))
+	}
+
+# Significance threshold for df = 4 and a = 0.05:
+chisq_crit <- qchisq(0.05, 4, lower.tail = FALSE)
+sum(xchisq < chisq_crit)
+sum(1 - pchisq(xchisq, df = 4) > 0.05)	# check
+mean(xchisq)
+1 - pchisq(mean(xchisq), df = 4)	# significance of average Chi-Square value
+
+```
+
+To double-check, perform a logistic mixed model of horizontal versus vertical:
+
+```{r logistic}
+
+E1log <- filter(E1l, AxisChoice != 'Diagonal') %>%
+	mutate(AxisChoice = droplevels(AxisChoice))
+
+mymdl <- glmer(AxisChoice ~ Condition + (1|Subject),
+	data = E1log, family = 'binomial')
+
+summary(mymdl)
+
+mixed(AxisChoice ~ Condition + (1|Subject),
+	data = E1log, family = 'binomial', method = 'LRT')
+
+```
+
+Compare single-axis versus diagonal responses:
+
+```{r continuity}
+
+E1_diag_vs_no <- matrix(c(E1_xtab[, 'Horizontal'] + E1_xtab[, 'Vertical'],
+	E1_xtab[, 'Diagonal']), nrow = 3, byrow = FALSE)
+
+colSums(E1_diag_vs_no)
+
+prop.table(colSums(E1_diag_vs_no))
+
+binom.test(colSums(E1_diag_vs_no))
+
+```
+
+Calculate Shannon entropy:
+
+```{r entropy}
+
+entropies <- round(apply(E1_xtab, MARGIN = 1, FUN = entropy), 2)
+
+```
+
+Create plot of results:
+
+```{r plot}
+
+# Create subsidiary tables for plotting and transpose tables for easy looping:
+E1_prop <- prop.table(E1_xtab, 1)
+E1_percents <- t(apply(round(E1_prop * 100, 0),
+	FUN = function(x) str_c(x, '%'), MARGIN = 1))
+E1_stdres <- round(E1_chisq$stdres, 1)
+
+# Plotting parameters:
+xfac <- 0.1
+yfac <- 4.5
+yfac2 <- 1.6
+yfac_bottom <- 2
+mycols <- c('steelblue4', 'indianred4', 'goldenrod3')
+mylabs <- c('Horizontal', 'Vertical', 'Diagonal')
+
+# Make plot:
+quartz('', 11, 4)
+par(mai = c(1, 1.5, 0.5, 0.5))
+emptyplot(xlim = c(0, 11), ylim = c(0, 40))
+axis(side = 2, at = seq(0, 40, 10),
+	font = 2, las = 2, cex.axis = 1.5, lwd = 2)
+mtext(text = 'Count', side = 2, line = 3.8,
+	font = 2, cex = 2)
+axis(side = 1, at = c(2, 6, 10) - 0.5,
+	labels = c('Quantity', 'Time', 'Valence'),
+	font = 2, cex.axis = 1.5, line = 0.5, tick = FALSE)
+axis(side = 1, at = 2 - 0.5,
+	labels = bquote(italic('H')==.(entropies[2])),
+	font = 2, cex.axis = 1.20, line = 1.9, tick = FALSE)
+axis(side = 1, at = 6 - 0.5,
+	labels = bquote(italic('H')==.(entropies[1])),
+	font = 2, cex.axis = 1.2, line = 1.9, tick = FALSE)
+axis(side = 1, at = 10 - 0.5,
+	labels = bquote(italic('H')==.(entropies[3])),
+	font = 2, cex.axis = 1.2, line = 1.9, tick = FALSE)
+
+# Quantity bars:
+for (i in 1:3) {
+	rect(xleft = i - 1 + xfac, xright = i - xfac,
+		ybottom = 0, ytop = E1_xtab[1, i],
+		col = mycols[i], border = NA)
+	text(x = i - 0.5, y = E1_xtab[1, i] + yfac,
+		labels = E1_percents[1, i],
+		font = 2)
+	
+	# Fix stdres values for presentation:
+	this_stdres <- E1_stdres[2, i]
+	stdres_display <- this_stdres
+	if (this_stdres %% 1 == 0) {
+		stdres_display <- str_c(stdres_display, '.0')
+	}
+	if (this_stdres > 0) {
+		stdres_display <- str_c('+', as.character(stdres_display))
+	}
+	text(x = i - 0.5, y = E1_xtab[1, i] + yfac2,
+		labels = bquote(italic('r')==.(stdres_display)),
+		font = 2, cex = 0.9)
+	text(x = i - 0.5, y = 0 - yfac_bottom,
+		labels = mylabs[i], adj = c(0.5, 0.5),
+		font = 2, cex = 0.9, xpd = NA)
+}
+
+# Time bars:
+for (i in 1:3) {
+	rect(xleft = i - 1 + xfac + 4, xright = i - xfac + 4,
+		ybottom = 0, ytop = E1_xtab[2, i],
+		col = mycols[i], border = NA)
+	text(x = i - 0.5 + 4, y = E1_xtab[2, i] + yfac,
+		labels = E1_percents[2, i],
+		font = 2)
+	
+	# Fix stdres values for presentation:
+	this_stdres <- E1_stdres[2, i]
+	stdres_display <- this_stdres
+	if (this_stdres %% 1 == 0) {
+		stdres_display <- str_c(stdres_display, '.0')
+	}
+	if (this_stdres > 0) {
+		stdres_display <- str_c('+', as.character(stdres_display))
+	}
+	text(x = i - 0.5 + 4, y = E1_xtab[2, i] + yfac2,
+		labels = bquote(italic('r')==.(stdres_display)),
+		font = 2, cex = 0.9)
+	text(x = i - 0.5 + 4, y = 0 - yfac_bottom,
+		labels = mylabs[i],adj = c(0.5, 0.5),
+		font = 2, cex = 0.9, xpd = NA)
+}
+
+# Valence bars:
+for (i in 1:3) {
+	rect(xleft = i - 1 + xfac + 8, xright = i - xfac + 8,
+		ybottom = 0, ytop = E1_xtab[3, i],
+		col = mycols[i], border = NA)
+	text(x = i - 0.5 + 8, y = E1_xtab[3, i] + yfac,
+		labels = E1_percents[3, i],
+		font = 2)
+	
+	# Fix stdres values for presentation:
+	this_stdres <- E1_stdres[3, i]
+	stdres_display <- this_stdres
+	if (this_stdres %% 1 == 0) {
+		stdres_display <- str_c(stdres_display, '.0')
+	}
+	if (this_stdres > 0) {
+		stdres_display <- str_c('+', as.character(stdres_display))
+	}
+	text(x = i - 0.5 + 8, y = E1_xtab[3, i] + yfac2,
+		labels = bquote(italic('r')==.(stdres_display)),
+		font = 2, cex = 0.9)
+	text(x = i - 0.5 + 8, y = 0 - yfac_bottom,
+		labels = mylabs[i], adj = c(0.5, 0.5),
+		font = 2, cex = 0.9, xpd = NA)
+}
+```
+
+## Dominant Direction
+
+Find out how many participants responded from left-to-right, up-to-down etc. 
+```{r direction}
+
+# Horizontal (Table 1):
+
+(E1_hor_tab <- with(E1l, table(Condition, Horizontal)))
+(E1_hor_props <- prop.table(E1_hor_tab, 1))
+
+## Entropies per task (Table 1):
+
+E1_horizontal_entropies <- apply(E1_hor_tab, MARGIN = 1,
+	FUN = entropy)
+
+# Vertical (Table 1):
+
+(E1_ver_tab <- with(E1l, table(Condition, Vertical)))
+(E1_ver_props <- prop.table(E1_ver_tab, 1))
+
+## Entropies per task (Table 1):
+
+E1_vertical_entropies <- apply(E1_ver_tab, MARGIN = 1,
+	FUN = entropy)
+
+## Diagonal (Table 2):
+
+E1l_diag <- filter(E1l, ResponseAxis == 'Diagonal')
+print(E1_diagonal_horz <- with(E1l_diag, table(Condition, HorizontalDiag)))
+print(E1_diagonal_vert <- with(E1l_diag, table(Condition, VerticalDiag)))
+prop.table(E1_diagonal_horz, 1)
+prop.table(E1_diagonal_vert, 1)
+
+## Entropies per axis per task:
+
+print(E1_horz_entropies <- apply(E1_diagonal_horz, MARGIN = 1,
+	FUN = entropy))
+print(E1_vert_entropies <- apply(E1_diagonal_vert, MARGIN = 1,
+	FUN = entropy))
+
+```

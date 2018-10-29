@@ -1,0 +1,215 @@
+---
+title: "Preprocessing Experiment 3 Data"
+author: "Bodo Winter & Greg Woodin"
+date: "10/10/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Categorical analysis of Experiment 3
+
+This is the categorical analysis of Experiment 3. Start loading packages, function file and data:
+
+```{r libraries, message = FALSE}
+
+library(tidyverse)	# for data processing
+library(stringr)	# for data processing
+library(lme4)	# for mixed models
+library(afex)	# for mixed models
+library(MuMIn)	# for mixed models
+library(lsr)    # for calculating Cramer's V 
+
+source('../scripts/functions.R')
+
+E3 <- read_csv('../data/E3_cat.csv')
+E3 %>% print(n = 6, width = Inf)
+
+```
+
+Recode Axis as ‘Other / no pattern’ if Consistency == no:
+
+```{r recode}
+
+E3[E3$Direction == 'n/a', ]$Representation <- 'Other / no pattern'
+
+```
+
+## Axis Consistency
+
+Find out how many participants used an axis to structure their response:
+
+```{r axis}
+
+E3_tab <- table(E3$Representation)
+print(cons <- sum(E3_tab[names(E3_tab) != 'Other / no pattern']))   # consistent axis
+print(incons <- sum(E3_tab[names(E3_tab) == 'Other / no pattern']))   # inconsistent axis
+prop.table(c(cons, incons))
+
+```
+
+## Dominant Orientation
+
+Find out what axis participants chose for each task:
+
+```{r orientation}
+
+# Descriptive stats:
+(E3_tab <- table(E3$Representation)[c('Horizontal', 'Vertical', 'Diagonal')])
+E3_props <- prop.table(E3_tab)
+(E3_percents <- str_c(round(E3_props * 100, 0), '%'))
+
+# Perform a Chi-square test on this:
+chisq.test(E3_tab)
+chisq.test(E3_tab)$stdres
+cramersV(E3_tab)	# small = 0.1, medium = 0.3, large = 0.8
+
+```
+
+Compare E3 results (exact numerals) with E1 and E2 (quantities):
+
+```{r compare}
+
+# Load in E1 data:
+E1 <- read_csv("../data/E1.csv")
+
+# Load in E2 data:
+E2 <- read_csv("../data/E2cat_long.csv")
+
+# Preliminary data wrangling to match E2_cat_analysis.Rmd:
+E2[is.na(E2$DirectionDetailed), ]$AxisChoice <- 'other'
+E2[is.na(E2$DirectionDetailed), ]$AxisChoiceDetailed <- 'other / no pattern'
+E2[is.na(E2$AxisChoice), ]$AxisChoice <- 'other'
+
+# Merge with E1 and E2 axis orientations:
+E1_num_tab <- table(E1$QuantityAxis)[c('Horizontal', 'Vertical', 'Diagonal')]
+E2_num_tab <- table(filter(E2, Condition == 'Quantity')$AxisChoice)[c('horizontal', 'vertical', 'diagonal')]
+names(E2_num_tab) <- c('Horizontal', 'Vertical', 'Diagonal')
+
+# Chi-Square tests:
+print(E1_vs_E3_chisq <- chisq.test(bind_rows(E3_tab, E1_num_tab)))
+print(E2_vs_E3_chisq <- chisq.test(bind_rows(E3_tab, E2_num_tab)))
+
+# Look at standardized residuals:
+round(E1_vs_E3_chisq$stdres, 1)
+round(E2_vs_E3_chisq$stdres, 1)
+
+# Get entropies:
+entropy(E3_tab)
+entropy(E1_num_tab)
+entropy(E2_num_tab)
+
+```
+
+Make plot of this data:
+
+```{r plot}
+
+# Plotting parameters:
+xfac <- 0.1
+yfac <- 4.5
+yfac2 <- 1.6
+yfac_bottom <- 2
+mycols <- c('steelblue4', 'indianred4', 'goldenrod3')
+mylabs <- c('Horizontal', 'Vertical', 'Diagonal')
+
+quartz('', 6, 4)
+par(mai = c(1, 1.5, 0.5, 0.5))
+emptyplot(xlim = c(0, 3), ylim = c(0, 40))
+axis(side = 2, at = seq(0, 40, 10),
+	font = 2, las = 2, cex.axis = 1.5, lwd = 2)
+mtext(text = 'Count', side = 2, line = 3.8,
+	font = 2, cex = 2)
+axis(side = 1, at = c(2) - 0.5,
+	labels = c('Quantity, exact'),
+	font = 2, cex.axis = 1.5, line = 0.5, tick = FALSE)
+axis(side = 1, at = 2 - 0.5,
+	labels = bquote(italic('H')==.(round(entropy(E3_tab), 2))),
+	font = 2, cex.axis = 1.20, line = 1.9, tick = FALSE)
+
+# Quantity bars:
+for (i in 1:3) {
+	rect(xleft = i - 1 + xfac, xright = i - xfac,
+		ybottom = 0, ytop = E3_tab[i],
+		col = mycols[i], border = NA)
+	text(x = i - 0.5, y = E3_tab[i] + yfac,
+		labels = E3_percents[i],
+		font = 2)
+	
+	# Fix stdres values for presentation:
+	this_stdres <- round(chisq.test(E3_tab)$stdres[i], 1)
+	stdres_display <- this_stdres
+	if (this_stdres %% 1 == 0) {
+		stdres_display <- str_c(stdres_display, '.0')
+	}
+	if (this_stdres > 0) {
+		stdres_display <- str_c('+', as.character(stdres_display))
+	}
+	text(x = i - 0.5, y = E3_tab[i] + yfac2,
+		labels = bquote(italic('r')==.(stdres_display)),
+		font = 2, cex = 0.9)
+	text(x = i - 0.5, y = 0 - yfac_bottom,
+		labels = mylabs[i], adj = c(0.5, 0.5),
+		font = 2, cex = 0.8, xpd = NA)
+	}
+
+```
+
+Look at whether participants who took part in both E1 and E3 switched their choice of axis from E1 to E3:
+
+```{r compare_E1}
+
+# Merge E1 and E3 (note: subjects 31A - 50A correspond to subjects 31-50 in E1)
+E3_E1match <- filter(E3, Subject %in% str_c(31:50, 'A')) %>%
+	mutate(Subject = str_extract(Subject, '[0-9]+'),
+		Subject = as.integer(Subject)) %>%
+	left_join(E1, by = c('Subject' = 'Subject'))
+with(E3_E1match, table(QuantityAxis, Representation))
+
+# Count number of 'switchers':
+3 + 5 + 2 + 1 + 3 + 2
+
+# Count total number of participants who took part in E1 and E3:
+sum(with(E3_E1match, table(QuantityAxis, Representation)))
+
+# Count total number of responses for each type of response overall across E1 and E3:
+colSums(with(E3_E1match, table(QuantityAxis, Representation)))
+
+# Descriptive stats:
+switchers <- c(0, 1, 6, 9)	# vertical, diagonal, horizontal, other/no-pattern
+switchers / sum(switchers)	# percentages
+
+# Perform a Chi-square test on this:
+chisq.test(switchers)
+
+```
+
+Look at whether participants who took part in both E2 and E3 switched their choice of axis from E2 to E3:
+
+```{r compare_E2}
+
+# Merge E1 and E3 (note: subjects 41B - 60B correspond to subjects 41 - 60 in E2))
+E3_E2match <- filter(E3, Subject %in% str_c(41:60, 'B')) %>%
+	mutate(Subject = str_extract(Subject, '[0-9]+'),
+		Subject = as.integer(Subject)) %>%
+	left_join(filter(E2, Condition == 'Quantity'), by = c('Subject' = 'Subject'))
+with(E3_E2match, table(AxisChoice, Representation))
+
+# Count number of 'switchers':
+1 + 1 + 4 + 2 + 3 + 1
+
+# Of those subjects that switched, find out what axis they switched to:
+mytab <- with(E3_E2match, table(AxisChoice, Representation))
+switchers <- mytab[1, ] + mytab[3, ] + mytab[4, ]
+switchers[1] <- switchers[1] + 1	# the subject who switched from 'horizontal' to 'diagonal'
+switchers[3] <- switchers[3] - 3	# the three subjects who stayed 'other'
+switchers[4] <- switchers[4] - 1	# the subject who stayed 'vertical'
+switchers
+prop.table(switchers)
+
+# Perform a Chi-square test on this:
+chisq.test(switchers)
+
+```

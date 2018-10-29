@@ -1,0 +1,94 @@
+---
+title: "Preprocessing Experiment 4 data"
+author: "Bodo Winter & Greg Woodin"
+date: "10/5/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## E4 image creation
+
+To make the analysis of E4 maximally comparable to E1-E3, we hand-coded images according to categorical axis labels ("horizontal", "vertical" etc.)
+
+This Markdown script creates the image files on which the hand-coding was based.
+
+Start loading packages, function file and data:
+
+```{r libraries, message = FALSE}
+library(tidyverse)
+library(stringr)
+
+source('../scripts/functions.R')
+
+df <- read_csv("../data/E4_processed.csv")
+df %>% print(n = 6, width = Inf)
+```
+
+Create unique subject / task combination (one circle each):
+
+```{r unique_sub_task}
+df <- mutate(df,
+             Task = str_c(ID, '_', Type))
+all_tasks <- unique(df$Task)
+```
+
+Create plots and save as pngs into image folder:
+
+```{r image_create}
+file_path <- '../image_coding/'
+
+for (i in seq_along(all_tasks)){
+  id <- all_tasks[i]
+	df_sub <- filter(df, Task == id)
+	df_x <- filter(df_sub, Axis == 'x')
+	df_y <- filter(df_sub, Axis == 'y')
+	png(filename = str_c(file_path, id, '.png'),
+	    width = 500, height = 500)
+	emptyplot(xlim = c(0, 800), ylim = c(0, 800))
+	text(x = df_x$Pixel, y = df_y$Pixel,
+	     labels = df_x$Resp, font = 2, cex = 2)
+	dev.off()
+	}
+```
+
+## Create table for coding image responses
+
+Create table for coding:
+
+```{r create_qual_table}
+coding_table <- tibble(all_tasks) %>%
+  separate(all_tasks, into = c('ID', 'Type'))
+```
+
+Initiate some columns:
+
+```{r write_coding_table}
+coding_table$ConsistentAxis <- NA
+coding_table$Orientation <- NA
+coding_table$HorizontalDirection <- NA
+coding_table$VerticalDirection <- NA
+
+# write_csv(coding_table,
+          #'../data/coding_table.csv')
+```
+
+## Coding table for qualitative interview repsonses
+
+Create table for coding interview responses:
+
+```{r qual_create}
+qual_df <- df[!duplicated(df$ID), ] %>%
+  select(ID, Exp1:Exp4)
+#write_csv(qual_df, #'../data/quantitative_data/qual_responses.csv')
+```
+
+
+
+
+
+
+
+

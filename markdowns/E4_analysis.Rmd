@@ -1,0 +1,1041 @@
+---
+title: "Preprocessing Experiment 4 data"
+author: "Bodo Winter & Greg Woodin"
+date: "05/10/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Analysis of Experiment 4
+
+This is the analysis of Experiment 4. Start loading packages, function file and data:
+
+```{r libraries, message = FALSE}
+
+library(tidyverse)    # for data processing
+library(stringr)    # for data processing
+library(lme4)   # for mixed models
+library(afex)   # for mixed models
+library(lsr)   # for Cramer's V
+
+source('../scripts/functions.R')
+
+df <- read_csv("../data/E4_processed.csv")
+df %>% print(n = 6, width = Inf)
+
+```
+
+Check how many subjects, how many male and female:
+
+```{r sub_stats}
+
+# Number of subjects:
+
+length(unique(df$ID))
+
+# Male/female:
+
+apply(table(df$ID, df$Gender), MARGIN = 1,
+      FUN = function(x) ifelse(x[1] > 0, 'Female', 'Male')) %>% table()
+
+# Handedness:
+
+hv <- c('left', 'ambi', 'right')
+apply(table(df$ID, df$Handedness), MARGIN = 1,
+      FUN = function(x) hv[which.max(x)]) %>% table()
+```
+
+Compute x- and y-axis ranges (across the four clicks). This is a rough indicator of axis use. We do this separately for each subject and each task (time, valence etc.)
+
+```{r avg_range}
+
+df_range <- df %>%
+  group_by(ID, Type, Axis) %>%
+  summarize(Min = min(Pixel),
+            Max = max(Pixel)) %>%
+  mutate(Range = Max - Min)
+```
+
+## Analysis of axis use via range (continuous)
+
+First, let's explore some descriptive stats:
+
+```{r range_avgs}
+
+df_range %>% group_by(Type, Axis) %>%
+	summarize(RangeM = mean(Range),
+	RangeSD = sd(Range))
+```
+
+Make factors for ordering in plot:
+
+```{r order_facs}
+
+df_range <- df_range %>%
+  ungroup %>%
+  mutate(Type = factor(Type, levels = c('T', 'Q', 'N', 'V')))
+```
+
+Make a public-ready boxplot:
+
+```{r get_boxplot_data}
+
+x_box <- boxplot(Range ~ Type,
+                 data = filter(df_range, Axis == 'x'),
+                 plot = FALSE)
+y_box <- boxplot(Range ~ Type,
+                 data = filter(df_range, Axis == 'y'),
+                 plot = FALSE)
+```
+
+Set columns (both quantity and number will be red):
+
+```{r set_cols}
+mycols <- c('steelblue4',
+            'indianred4', 'indianred4', 'goldenrod3')
+```
+
+```{r range_plot, fig.width = 12, fig.height = 5}
+
+xfac <- 0.1
+
+quartz('', 12, 4)
+par(mai = c(0.75, 1.5, 0.5, 0.5))
+emptyplot(xlim = c(0, 10), ylim = c(0, 700))
+axis(side = 2, at = seq(0, 700, 100),
+	font = 2, las = 2, cex.axis = 1.35, lwd = 2)
+mtext(text = 'Range (pixels)', side = 2, line = 3.8,
+	font = 2, cex = 1.75)
+axis(side = 1, at = seq(0.5, 3.5, 1),
+	labels = c('Time', 'Quantity', 'Number', 'Valence'),
+	font = 2, cex.axis = 1, line = -1.5, tick = FALSE)
+axis(side = 1, at = c(2, 7),
+	labels = c('x-axis', 'y-axis'),
+	font = 2, cex.axis = 1.5, line = 0.5, tick = FALSE)
+for (i in 1:4) {
+	rect(xleft = i - 1 + xfac, xright = i - xfac,
+		ybottom = x_box$stats[2, i],
+		ytop = x_box$stats[4, i],
+		col = mycols[i])
+	segments(x0 = i - 1 + xfac + 0.05, x1 = i - xfac - 0.05,
+		y0 = x_box$stats[3, i], lwd = 2)
+	segments(x0 = seq(0.5, 3.5, 1)[i],
+		y0 = x_box$stats[4, i],
+		y1 = x_box$stats[5, i])
+	segments(x0 = seq(0.5, 3.5, 1)[i],
+		y1 = x_box$stats[2, i],
+		y0 = x_box$stats[1, i])
+	}
+axis(side = 1, at = seq(0.5, 3.5, 1) + 5,
+	labels = c('Time', 'Quantity', 'Number', 'Valence'),
+	font = 2, cex.axis = 1, line = -1.5, tick = FALSE)
+for (i in 1:4) {
+	rect(xleft = i - 1 + xfac + 5, xright = i - xfac + 5,
+		ybottom = y_box$stats[2, i],
+		ytop = y_box$stats[4, i],
+		col = mycols[i])
+	segments(x0 = i - 1 + xfac + 0.05 + 5, x1 = i - xfac - 0.05 + 5,
+		y0 = y_box$stats[3, i], lwd = 2)		
+	segments(x0 = seq(0.5, 3.5, 1)[i] + 5,
+		y0 = y_box$stats[4, i],
+		y1 = y_box$stats[5, i])
+	segments(x0 = seq(0.5, 3.5, 1)[i] + 5,
+		y1 = y_box$stats[2, i],
+		y0 = y_box$stats[1, i])
+}
+```
+
+Models of this, with the afex package for likelihood ratio tests:
+
+```{r afex_LRT, message = FALSE}
+x_mdl <- mixed(Range ~ Type + (1|ID),
+	data = filter(df_range, Axis == 'x'), method = 'LRT', check_contrasts = FALSE)
+y_mdl <- mixed(Range ~ Type + (1|ID),
+	data = filter(df_range, Axis == 'y'), method = 'LRT', check_contrasts = FALSE)
+all_mdl <- mixed(Range ~ Type * Axis +
+                   (1 + Axis|ID),
+	data = df_range, method = 'LRT')
+```
+
+Check the likelihood ratio tests results:
+
+```{r afex_results}
+x_mdl
+y_mdl
+all_mdl
+```
+
+Check the individual models:
+
+```{r check_models}
+summary(x_mdl$full_model)
+summary(y_mdl$full_model)
+```
+
+Check the full model:
+
+```{r main_mdl_investigate}
+summary(all_mdl$full_model)$coefficients
+```
+
+Sum-coding makes this quite difficult to interpret. Let's use a treatment-coded model:
+
+```{r treatment_codes}
+xmdl <- lmer(Range ~ Type * Axis +
+               (1 + Axis|ID), data = df_range)
+summary(xmdl)
+```
+
+With treatment-codes, time is the reference level. It looks like compared to time, quantity is more expressed along the y axis (TypeQ:Axisy), and verticality is more expressed along the y axis (TypeV:Axisy).
+
+Get predictions:
+
+```{r get_preds}
+source('../scripts/predict.glmm.R')
+all_types <- unique(df_range$Type)
+all_axis <- unique(df_range$Axis)
+newdata <- expand.grid(all_types, all_axis) %>%
+  rename(Type = Var1, Axis = Var2) %>%
+  arrange(Type)
+predict.glmm(xmdl, newdata = newdata) %>%
+  mutate(Range = round(Range))
+```
+
+The model predicts quantity to be much more y-expanded. The same goes for valence. For time and number, there's no big difference between x and y.
+
+## Analysis of categorical classifications
+
+Load in Greg's classifications:
+
+```{r cat_loadin}
+E4cat <- read_csv('../data/E4_cat.csv')
+E4cat %>% print(n = 4, width = Inf)
+```
+
+As was done for E2 and E3, only those that used the axis consistently contribute to the "AxisChoice" measure. This is so that responses that don't obey any conceptual order are not counted.
+
+```{r NA_for_no_axes}
+E4cat[which(E4cat$ConsistentAxis == 'no'), ]$AxisChoice <- NA
+```
+
+## Analysis of single versus combined axis choice
+
+Recode horizontal and vertical to "single axis", so that it can be contrasted with diagonal.
+
+```{r single_versus_diagonal}
+E4cat <- mutate(E4cat,
+                DiagonalVsRest = ifelse(AxisChoice == 'horizontal' | AxisChoice == 'vertical', 'single', AxisChoice))
+```
+
+Tabulate single versus diagonal choices:
+
+```{r table_of_single_vs_diagonal}
+xtab <- table(E4cat$DiagonalVsRest)
+xtab
+```
+
+Proportions:
+
+```{r single_vs_diagonal_props}
+round(prop.table(xtab), 2)
+```
+
+Perform a binomial test:
+
+```{r single_vs_diagonal_binom}
+binom.test(xtab)
+```
+
+## Consistent axis use
+
+Let's look at consistent axis choice overall:
+
+```{r consistent_axis_overall}
+table(E4cat$ConsistentAxis)
+round(prop.table(table(E4cat$ConsistentAxis)), 2)
+```
+
+Let's look at consistent axis choice:
+
+```{r consistent_axis}
+xtab <- with(E4cat,
+             table(Condition, ConsistentAxis))
+xtab
+```
+
+Let's make a table of proportions for this, with row-wise proportions (convert these to percentages):
+
+```{r consistent_axis_props}
+round(prop.table(xtab, 1), 2)
+```
+
+Let's perform a Chi-Square test of this:
+
+```{r consistent_axis_chisq}
+chisq.test(xtab)
+```
+
+Not significant.
+
+Check Cramer's V:
+
+```{r consistent_axis_cramer}
+cramersV(xtab)
+```
+
+Weak.
+
+## Analysis of round responses
+
+Look at number of round versus number of axial responses. This column needs to be created first:
+
+```{r round_versus_axial}
+axials <- c('diagonal', 'horizontal', 'vertical')
+E4cat$RoundVsAxial <- NA
+E4cat <- mutate(E4cat,
+                RoundVsAxial = ifelse(ChoiceDetailed %in% axials, 'axial', RoundVsAxial),
+                RoundVsAxial = ifelse(ChoiceDetailed == 'round', 'round', RoundVsAxial))
+```
+
+Tabulate round vs.a xial:
+
+```{r round_ax_table}
+table(E4cat$RoundVsAxial)
+```
+
+Proportions:
+
+```{r round_ax_props}
+round(prop.table(table(E4cat$RoundVsAxial)), 2)
+```
+
+Binomial test:
+
+```{r round_ax_binomtest}
+binom.test(table(E4cat$RoundVsAxial))
+```
+
+Look at whether there was a consistent direction (clockwise/counterclockwise) for the round responses:
+
+```{r round_consistent_tab}
+xtab <- table(E4cat$ConsistentRoundDirection)
+xtab
+```
+
+Proportions:
+
+```{r round_consistent_prop}
+round(prop.table(xtab), 2)
+```
+
+Binomial test:
+
+```{r round_consistent_binom}
+binom.test(xtab)
+```
+
+Not significant.
+
+Look at clockwise versus counterclockwise overall:
+
+```{r clockwise_counterclockwise_sum}
+table(E4cat$RoundDirectionDetailed)
+round(prop.table(table(E4cat$RoundDirectionDetailed)), 2)
+```
+
+And a binomial test of this:
+
+```{r clockwise_counterclockwise_binom}
+binom.test(table(E4cat$RoundDirectionDetailed))
+```
+
+Look at clockwise versus counterclockwise for the RoundDirectionDetailed column:
+
+```{r clockwise_per_cond}
+xtab <- with(E4cat, table(Condition,
+                  RoundDirectionDetailed))
+xtab
+```
+
+Row-wise proportions for this:
+
+```{r clockwise_per_cond_props}
+prop.table(xtab, 1)
+```
+
+And a test of this:
+
+```{r clockwise_per_cond_chisq}
+chisq.test(xtab)
+```
+
+## Axis choice
+
+Let's create a table of this:
+
+```{r axis_by_cat}
+xtab <- with(E4cat,
+             table(Condition, AxisChoice))
+xtab
+```
+
+Let's look at the proportions of that (row-wise proportions).
+
+```{r axis_proportions}
+round(prop.table(xtab, 1), 2)
+```
+
+Let's perform a Chi-Square test of this:
+
+```{r axis_choice_chisq}
+E4_chisq <- chisq.test(xtab)
+E4_chisq
+```
+
+Not significant.
+
+```{r axis_choice_chisq_stdres}
+E4_chisq$stdres
+```
+
+Check Cramer's V:
+
+```{r axis_choice_cramer}
+cramersV(xtab)
+```
+
+Weak.
+
+## (Unplanned) Post-hoc analysis: 
+
+We suspect that the diagonal responses (evenly spread across tasks and low numbers) may mess up the results in this case. We have not planned the following analysis before the data was in: What if we restrict the Chi-Square test analysis to horizontal and vertical responses?
+
+```{r restrict_chisq}
+xtab <- with(E4cat,
+             table(Condition, AxisChoice))
+xtab <- xtab[, -1]
+chisq.test(xtab)
+chisq.test(xtab)$stdres
+cramersV(xtab)
+```
+
+## Entropy
+
+Let's check the entropy across the three categories diagonal/horizontal/vertical.
+
+```{r axis_entropy}
+E4_tab <- table(E4cat$Condition, E4cat$AxisChoice)
+entropies <- apply(E4_tab, 1, entropy)
+entropies <- round(entropies, 2)
+entropies
+```
+
+Looks like time and number are the most variable. Quantity is the least variable, closely followed by valence.
+
+## Plot with categories and entropy
+
+Plot data:
+
+```{r plot, fig.width = 11, fig.height = 4}
+
+# Create subsidiary tables for plotting and transpose tables for easy looping:
+E4_prop <- prop.table(E4_tab, 1)
+E4_percents <- t(apply(round(E4_prop * 100, 0),
+	FUN = function(x) str_c(x, '%'), MARGIN = 1))
+E4_stdres <- round(E4_chisq$stdres, 1)
+
+# Plotting parameters:
+xfac <- 0.1
+yfac <- 4.5
+yfac2 <- 1.6
+yfac_bottom <- 2
+mycols <- c('steelblue4', 'indianred4', 'goldenrod3')
+mylabs <- c('Horizontal', 'Vertical', 'Diagonal')
+
+# Make a nice publication-ready plot of this:
+quartz('', 14, 4)
+par(mai = c(1, 1.5, 0.5, 0.5))
+emptyplot(xlim = c(0, 15), ylim = c(0, 50))
+axis(side = 2, at = seq(0, 50, 10),
+	font = 2, las = 2, cex.axis = 1.5, lwd = 2)
+mtext(text = 'Count', side = 2, line = 3.8,
+	font = 2, cex = 2)
+axis(side = 1, at = c(2, 6, 10, 14) - 0.5,
+	labels = c('Quantity', 'Number', 'Time', 'Valence'),
+	font = 2, cex.axis = 1.5, line = 0.5, tick = FALSE)
+axis(side = 1, at = 2 - 0.5,
+	labels = bquote(italic('H')==.(entropies[2])),
+	font = 2, cex.axis = 1.20, line = 1.9, tick = FALSE)
+axis(side = 1, at = 6 - 0.5,
+	labels = bquote(italic('H')==.(entropies[1])),
+	font = 2, cex.axis = 1.2, line = 1.9, tick = FALSE)
+axis(side = 1, at = 10 - 0.5,
+	labels = bquote(italic('H')==.(entropies[3])),
+	font = 2, cex.axis = 1.2, line = 1.9, tick = FALSE)
+axis(side = 1, at = 14 - 0.5,
+	labels = bquote(italic('H')==.(entropies[4])),
+	font = 2, cex.axis = 1.2, line = 1.9, tick = FALSE)
+
+# Quantity bars:
+this_row <- row.names(E4_tab) == 'Q'
+col_seq <- c(2, 3, 1)
+for (i in 1:3) {
+  mycol <- col_seq[i]
+	rect(xleft = i - 1 + xfac, xright = i - xfac,
+		ybottom = 0, ytop = E4_tab[this_row, mycol],
+		col = mycols[i], border = NA)
+	text(x = i - 0.5, y = E4_tab[this_row, mycol] + yfac,
+		labels = E4_percents[this_row, mycol],
+		font = 2)
+	
+	# Fix stdres values for presentation:
+	this_stdres <- E4_stdres[this_row, mycol]
+	stdres_display <- this_stdres
+	if (this_stdres %% 1 == 0) {
+		stdres_display <- str_c(stdres_display, '.0')
+	}
+	if (this_stdres > 0) {
+		stdres_display <- str_c('+', as.character(stdres_display))
+	}
+	text(x = i - 0.5, y = E4_tab[this_row, mycol] + yfac2,
+		labels = bquote(italic('r')==.(stdres_display)),
+		font = 2, cex = 0.7)
+	text(x = i - 0.5, y = 0 - yfac_bottom,
+		labels = mylabs[i], adj = c(0.5, 0.5),
+		font = 2, cex = 0.9, xpd = NA)
+}
+
+# Number bars:
+this_row <- row.names(E4_tab) == 'N'
+col_seq <- c(2, 3, 1)
+xshift <- 4
+for (i in 1:3) {
+  mycol <- col_seq[i]
+	rect(xleft = i - 1 + xfac + xshift,
+	     xright = i - xfac + xshift,
+		ybottom = 0, ytop = E4_tab[this_row, mycol],
+		col = mycols[i], border = NA)
+	text(x = i - 0.5 + xshift, y = E4_tab[this_row, mycol] + yfac,
+		labels = E4_percents[this_row, mycol],
+		font = 2)
+	
+	# Fix stdres values for presentation:
+	this_stdres <- E4_stdres[this_row, mycol]
+	stdres_display <- this_stdres
+	if (this_stdres %% 1 == 0) {
+		stdres_display <- str_c(stdres_display, '.0')
+	}
+	if (this_stdres > 0) {
+		stdres_display <- str_c('+', as.character(stdres_display))
+	}
+	text(x = i - 0.5 + xshift,
+	     y = E4_tab[this_row, mycol] + yfac2,
+		labels = bquote(italic('r')==.(stdres_display)),
+		font = 2, cex = 0.7)
+	text(x = i - 0.5 + xshift, y = 0 - yfac_bottom,
+		labels = mylabs[i], adj = c(0.5, 0.5),
+		font = 2, cex = 0.9, xpd = NA)
+}
+
+# Time bars:
+this_row <- row.names(E4_tab) == 'T'
+col_seq <- c(2, 3, 1)
+xshift <- 8
+for (i in 1:3) {
+  mycol <- col_seq[i]
+	rect(xleft = i - 1 + xfac + xshift,
+	     xright = i - xfac + xshift,
+		ybottom = 0, ytop = E4_tab[this_row, mycol],
+		col = mycols[i], border = NA)
+	text(x = i - 0.5 + xshift, y = E4_tab[this_row, mycol] + yfac,
+		labels = E4_percents[this_row, mycol],
+		font = 2)
+	
+	# Fix stdres values for presentation:
+	this_stdres <- E4_stdres[this_row, mycol]
+	stdres_display <- this_stdres
+	if (this_stdres %% 1 == 0) {
+		stdres_display <- str_c(stdres_display, '.0')
+	}
+	if (this_stdres > 0) {
+		stdres_display <- str_c('+', as.character(stdres_display))
+	}
+	text(x = i - 0.5 + xshift,
+	     y = E4_tab[this_row, mycol] + yfac2,
+		labels = bquote(italic('r')==.(stdres_display)),
+		font = 2, cex = 0.7)
+	text(x = i - 0.5 + xshift, y = 0 - yfac_bottom,
+		labels = mylabs[i], adj = c(0.5, 0.5),
+		font = 2, cex = 0.9, xpd = NA)
+}
+
+# Valence bars:
+this_row <- row.names(E4_tab) == 'V'
+col_seq <- c(2, 3, 1)
+xshift <- 12
+for (i in 1:3) {
+  mycol <- col_seq[i]
+	rect(xleft = i - 1 + xfac + xshift,
+	     xright = i - xfac + xshift,
+		ybottom = 0, ytop = E4_tab[this_row, mycol],
+		col = mycols[i], border = NA)
+	text(x = i - 0.5 + xshift, y = E4_tab[this_row, mycol] + yfac,
+		labels = E4_percents[this_row, mycol],
+		font = 2)
+	
+	# Fix stdres values for presentation:
+	this_stdres <- E4_stdres[this_row, mycol]
+	stdres_display <- this_stdres
+	if (this_stdres %% 1 == 0) {
+		stdres_display <- str_c(stdres_display, '.0')
+	}
+	if (this_stdres > 0) {
+		stdres_display <- str_c('+', as.character(stdres_display))
+	}
+	text(x = i - 0.5 + xshift,
+	     y = E4_tab[this_row, mycol] + yfac2,
+		labels = bquote(italic('r')==.(stdres_display)),
+		font = 2, cex = 0.7)
+	text(x = i - 0.5 + xshift, y = 0 - yfac_bottom,
+		labels = mylabs[i], adj = c(0.5, 0.5),
+		font = 2, cex = 0.9, xpd = NA)
+}
+
+```
+
+## Dominant direction
+
+Let's look at dominant direction, for horizontal overall:
+
+```{r dom_direct_horz}
+table(E4cat$AxialDirectionHorizontal)
+round(prop.table(table(E4cat$AxialDirectionHorizontal)), 2)
+```
+
+For horizontal by task:
+
+```{r dom_direct_horz_task}
+xtab <- with(E4cat,
+     table(Condition, AxialDirectionHorizontal))
+xtab
+round(prop.table(xtab, 1), 2)
+```
+
+Entropy of that:
+
+```{r dom_direct_horz_task_entr}
+xtab <- with(E4cat,
+     table(Condition, AxialDirectionHorizontal))
+round(apply(xtab, 1, entropy), 2)
+```
+
+Horizontal entropy most variable for quantity and valence, least variable for numbers, then time! (Woohoo)
+
+For vertical overall:
+
+```{r dom_direct_vert}
+table(E4cat$AxialDirectionVertical)
+round(prop.table(table(E4cat$AxialDirectionVertical)), 2)
+```
+
+For vertical by task:
+
+```{r dom_direct_vert_task}
+xtab <- with(E4cat,
+     table(Condition, AxialDirectionVertical))
+xtab
+round(prop.table(xtab, 1), 2)
+```
+
+Entropy of that:
+
+```{r dom_direct_vert_task_entr}
+xtab <- with(E4cat,
+     table(Condition, AxialDirectionVertical))
+round(apply(xtab, 1, entropy), 2)
+```
+
+The reverse from the above entropies!  Quantity least vertically variable, followed by valence, then number, then time (sweet!).
+
+Let's look at detailed responses.
+
+```{r}
+table(E4cat$AxialDirectionDetailed)
+```
+
+
+## Analysis of interview data
+
+Load in interview data:
+
+```{r load_interviews}
+E4qual <- read_csv('../data/E4_IT.csv')
+```
+
+- maths & numbers together "AllMaths"
+- environment
+- radial / bullseye
+- clock
+- timeline
+- writing
+
+For all the sections headed with "Interview:", the counts and proportions are pooled across all participants (counts/proportions of trials overall).
+
+## Interview: Maths / numbers
+
+Combine maths and numbers for allmaths. For the numbers task this does not need to be done because it's always about numbers anyway and this has been coded in the "NumbersNumber" column.
+
+```{r combine_maths}
+E4qual <- mutate(E4qual,
+                 TimeAllMath = ifelse(TimeMaths == 'yes' | TimeNumber == 'yes', 'yes', 'no'),
+                 QuantityAllMath = ifelse(QuantityMaths == 'yes' | QuantityNumber == 'yes', 'yes', 'no'),
+                 ValenceAllMath = ifelse(ValenceMaths == 'yes' | ValenceNumber == 'yes', 'yes', 'no'))
+```
+
+Let's look at this:
+
+```{r allmaths_tables}
+# Time:
+
+table(E4qual$TimeAllMath)
+round(prop.table(table(E4qual$TimeAllMath)), 2)
+
+# Valence:
+
+table(E4qual$ValenceAllMath)
+round(prop.table(table(E4qual$ValenceAllMath)), 2)
+
+# Quantity:
+
+table(E4qual$QuantityAllMath)
+round(prop.table(table(E4qual$QuantityAllMath)), 2)
+
+# Number:
+
+table(E4qual$NumbersMaths)
+round(prop.table(table(E4qual$NumbersMaths)), 2)
+```
+
+## Interview: Environment
+
+Overall environment per condition:
+
+```{r environment_table}
+# Time:
+
+table(E4qual$TimeEnvironment)
+round(prop.table(table(E4qual$TimeEnvironment)), 2)
+
+# Valence:
+
+table(E4qual$ValenceEnvironment)
+round(prop.table(table(E4qual$ValenceEnvironment)), 2)
+
+# Quantity:
+
+table(E4qual$QuantityEnvironment)
+round(prop.table(table(E4qual$QuantityEnvironment)), 2)
+
+# Number:
+
+table(E4qual$NumbersEnvironment)
+round(prop.table(table(E4qual$NumbersEnvironment)), 2)
+```
+
+## Interview: Timeline
+
+Overall Timeline per condition:
+
+```{r Timeline_tables}
+# Time:
+
+table(E4qual$TimeTimeline)
+round(prop.table(table(E4qual$TimeTimeline)), 2)
+
+# Valence:
+
+table(E4qual$ValenceTimeline)
+round(prop.table(table(E4qual$ValenceTimeline)), 2)
+
+# Quantity:
+
+table(E4qual$QuantityTimeline)
+round(prop.table(table(E4qual$QuantityTimeline)), 2)
+
+# Number:
+
+table(E4qual$NumbersTimeline)
+round(prop.table(table(E4qual$NumbersTimeline)), 2)
+```
+
+## Interview: Writing
+
+Overall Writing per condition:
+
+```{r Writing_tables}
+# Time:
+
+table(E4qual$TimeWriting)
+round(prop.table(table(E4qual$TimeWriting)), 2)
+
+# Valence:
+
+table(E4qual$ValenceWriting)
+round(prop.table(table(E4qual$ValenceWriting)), 2)
+
+# Quantity:
+
+table(E4qual$QuantityWriting)
+round(prop.table(table(E4qual$QuantityWriting)), 2)
+
+# Number:
+
+table(E4qual$NumbersWriting)
+round(prop.table(table(E4qual$NumbersWriting)), 2)
+```
+
+## Interview: Radial
+
+Overall Radial per condition:
+
+```{r radial_tables}
+# Time:
+
+table(E4qual$TimeRadial)
+round(prop.table(table(E4qual$TimeRadial)), 2)
+
+# Valence:
+
+table(E4qual$ValenceRadial)
+round(prop.table(table(E4qual$ValenceRadial)), 2)
+
+# Quantity:
+
+table(E4qual$QuantityRadial)
+round(prop.table(table(E4qual$QuantityRadial)), 2)
+
+# Number:
+
+table(E4qual$NumbersRadial)
+round(prop.table(table(E4qual$NumbersRadial)), 2)
+```
+
+## Interview: Clock
+
+Overall clock per condition:
+
+```{r clock_tables}
+# Time:
+
+table(E4qual$TimeClock)
+round(prop.table(table(E4qual$TimeClock)), 2)
+
+# Valence:
+
+table(E4qual$ValenceClock)
+round(prop.table(table(E4qual$ValenceClock)), 2)
+
+# Quantity:
+
+table(E4qual$QuantityClock)
+round(prop.table(table(E4qual$QuantityClock)), 2)
+
+# Number:
+
+table(E4qual$NumbersClock)
+round(prop.table(table(E4qual$NumbersClock)), 2)
+```
+
+## Interview: Bullseye
+
+Overall Bullseye per condition:
+
+```{r Bullseye_tables}
+# Time:
+
+table(E4qual$TimeBullseye)
+round(prop.table(table(E4qual$TimeBullseye)), 2)
+
+# Valence:
+
+table(E4qual$ValenceBullseye)
+round(prop.table(table(E4qual$ValenceBullseye)), 2)
+
+# Quantity:
+
+table(E4qual$QuantityBullseye)
+round(prop.table(table(E4qual$QuantityBullseye)), 2)
+
+# Number:
+
+table(E4qual$NumbersBullseye)
+round(prop.table(table(E4qual$NumbersBullseye)), 2)
+```
+
+## Relationship between interviews and axes
+
+This part is exploratory. There are lots of associations between the interview data and the responses to look at. We are going to focus on results that stand out to us, or that are theoretically interesting.
+
+Merge the two datasets:
+
+```{r merge_interviews_plus_responses}
+E4both <- left_join(E4cat, E4qual)
+```
+
+## Interview & response: Clock & round responses
+
+Round vs axial, don't mind the fact that the table says QuantityClock, it's across all trials:
+
+```{r clock_by_trial}
+Q_clock <- with(filter(E4both, Condition == 'Q'),
+     table(QuantityClock, RoundVsAxial))
+Q_clock
+N_clock <- with(filter(E4both, Condition == 'N'),
+     table(NumbersClock, RoundVsAxial))
+N_clock
+T_clock <- with(filter(E4both, Condition == 'T'),
+     table(TimeClock, RoundVsAxial))
+T_clock
+V_clock <- with(filter(E4both, Condition == 'V'),
+     table(ValenceClock, RoundVsAxial))
+V_clock
+xtab <- Q_clock + N_clock + T_clock + V_clock
+xtab
+prop.table(xtab, 1)
+```
+
+Same for axis choice:
+
+```{r clock_by_trial_axischoice}
+Q_clock <- with(filter(E4both, Condition == 'Q'),
+     table(QuantityClock, AxisChoice))
+Q_clock
+N_clock <- with(filter(E4both, Condition == 'N'),
+     table(NumbersClock, AxisChoice))
+N_clock
+T_clock <- with(filter(E4both, Condition == 'T'),
+     table(TimeClock, AxisChoice))
+T_clock
+V_clock <- with(filter(E4both, Condition == 'V'),
+     table(ValenceClock, AxisChoice))
+V_clock
+xtab <- Q_clock + N_clock + T_clock + V_clock
+xtab
+prop.table(xtab, 1)
+```
+
+Of course, then it makes no sense to look at axis choice, because those who mentioned clocks for those trials responded roundly anyway.
+
+Same for counter clockwise versus clockwise:
+
+```{r clock_by_trial_ccw}
+Q_clock <- with(filter(E4both, Condition == 'Q'),
+     table(QuantityClock, RoundDirectionDetailed))
+Q_clock
+N_clock <- with(filter(E4both, Condition == 'N'),
+     table(NumbersClock, RoundDirectionDetailed))
+N_clock
+T_clock <- with(filter(E4both, Condition == 'T'),
+     table(TimeClock, RoundDirectionDetailed))
+T_clock
+V_clock <- with(filter(E4both, Condition == 'V'),
+     table(ValenceClock, RoundDirectionDetailed))
+V_clock
+xtab <- Q_clock + N_clock + T_clock + V_clock
+xtab
+prop.table(xtab, 1)
+```
+
+## Interview & response: Vertical & axis & environment
+
+```{r Environment_by_trial}
+Q_Environment <- with(filter(E4both, Condition == 'Q'),
+     table(QuantityEnvironment, RoundVsAxial))
+Q_Environment
+N_Environment <- with(filter(E4both, Condition == 'N'),
+     table(NumbersEnvironment, RoundVsAxial))
+N_Environment
+T_Environment <- with(filter(E4both, Condition == 'T'),
+     table(TimeEnvironment, RoundVsAxial))
+T_Environment
+V_Environment <- with(filter(E4both, Condition == 'V'),
+     table(ValenceEnvironment, RoundVsAxial))
+V_Environment
+xtab <- Q_Environment + N_Environment + T_Environment + V_Environment
+xtab
+prop.table(xtab, 1)
+```
+
+This is for all!
+
+Same for axis choice:
+
+```{r Environment_by_trial_axischoice}
+Q_Environment <- with(filter(E4both, Condition == 'Q'),
+     table(QuantityEnvironment, AxisChoice))
+N_Environment <- with(filter(E4both, Condition == 'N'),
+     table(NumbersEnvironment, AxisChoice))
+T_Environment <- with(filter(E4both, Condition == 'T'),
+     table(TimeEnvironment, AxisChoice))
+V_Environment <- with(filter(E4both, Condition == 'V'),
+     table(ValenceEnvironment, AxisChoice))
+xtab <- Q_Environment + N_Environment + T_Environment + V_Environment
+xtab
+prop.table(xtab, 1)
+```
+
+This is for all!
+
+## Interview & response: Timeline & horizontal
+
+Time line mentioning and horizontal responses.
+
+```{r Timeline_by_trial}
+Q_Timeline <- with(filter(E4both, Condition == 'Q'),
+     table(QuantityTimeline, RoundVsAxial))
+Q_Timeline
+N_Timeline <- with(filter(E4both, Condition == 'N'),
+     table(NumbersTimeline, RoundVsAxial))
+N_Timeline
+T_Timeline <- with(filter(E4both, Condition == 'T'),
+     table(TimeTimeline, RoundVsAxial))
+T_Timeline
+V_Timeline <- with(filter(E4both, Condition == 'V'),
+     table(ValenceTimeline, RoundVsAxial))
+V_Timeline
+xtab <- Q_Timeline + N_Timeline + T_Timeline[1, ] + V_Timeline
+xtab <- rbind(xtab, T_Timeline[2, ])
+row.names(xtab) <- c('no', 'yes')
+xtab
+prop.table(xtab, 1)
+```
+
+Same for axis choice:
+
+```{r Timeline_by_trial_axischoice}
+Q_Timeline <- with(filter(E4both, Condition == 'Q'),
+     table(QuantityTimeline, AxisChoice))
+Q_Timeline
+N_Timeline <- with(filter(E4both, Condition == 'N'),
+     table(NumbersTimeline, AxisChoice))
+N_Timeline
+T_Timeline <- with(filter(E4both, Condition == 'T'),
+     table(TimeTimeline, AxisChoice))
+T_Timeline
+V_Timeline <- with(filter(E4both, Condition == 'V'),
+     table(ValenceTimeline, AxisChoice))
+V_Timeline
+xtab <- Q_Timeline + N_Timeline + T_Timeline[1, ] + V_Timeline
+xtab <- rbind(xtab, T_Timeline[2, ])
+row.names(xtab) <- c('no', 'yes')
+xtab
+prop.table(xtab, 1)
+```
+
+Almost all were horizontal for those who mentioned timelines, and that was in the time condition.
+
+
+

@@ -1,0 +1,425 @@
+---
+title: "Qualitative analyses E1-E4"
+author: "Bodo Winter & Greg Woodin"
+date: "12/10/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Analysis of Experiments 1-4
+
+This is the analysis of Experiments 1-4. Start loading packages, function file and data:
+
+```{r libraries, message = FALSE}
+
+library(tidyverse)	# for data processing
+library(stringr)	# for data processing
+library(lsr)    # for calculating Cramer's V 
+library(tidytext)   # for splitting columns into tokens
+library(afex)   # for mixed models
+
+source('../scripts/functions.R')
+
+# Experiment 1:
+E1_qual <- read_csv("../data/E1_IT.csv")    # Interview responses    
+E1_qual %>% print(n = 6, width = Inf)
+
+# Experiment 2:
+E2_qual <- read_csv("../data/E2_cont_IT.csv")    
+E2_qual %>% print(n = 6, width = Inf)
+
+E2_cats <- read.csv("../data/E2cat_long.csv")    # Categorical analysis
+
+# Experiment 3:
+E3_qual <- read_csv("../data/E3_cont_IT.csv")    
+E3_qual %>% print(n = 6, width = Inf)
+
+E3_cats <- read.csv("../data/E3_cat.csv")    # Categorical analysis
+
+# Experiment 4:
+E4_qual <- read_csv("../data/E4_IT.csv")    # Interview responses
+E4_qual %>% print(n = 6, width = Inf)
+
+E4_cats <- read.csv("../data/E4_cat.csv")    # Categorical analysis
+
+```
+
+Prelimary data wrangling for Experiment 2: 
+
+```{r wrangling_E2}
+
+# Recode AxisChoice as 'other' and AxisChoiceDetailed as ‘other / no pattern’ if DirectionDetailed == NA:
+E2_cats[is.na(E2_cats$DirectionDetailed), ]$AxisChoice <- 'other'
+E2_cats[is.na(E2_cats$DirectionDetailed), ]$AxisChoiceDetailed <- 'other / no pattern'
+
+# Find out number of participants:
+print(ntot <- length(unique(E2_cats$Subject)))
+
+# Change NAs in AxisChoice to 'other':
+E2_cats[is.na(E2_cats$AxisChoice), ]$AxisChoice <- 'other'
+
+```
+
+Prelimary data wrangling for Experiment 3: 
+
+```{r wrangling_E3}
+
+# Recode Axis as ‘Other / no pattern’ if Consistency == no:
+E3_cats[E3_cats$Direction == 'n/a', ]$Representation <- 'Other / no pattern'
+
+```
+
+Get rid of NAs:
+
+```{r NAs}
+
+E2_qual <- filter(E2_qual, !is.na(Subject))
+E3_qual <- filter(E3_qual, !is.na(Subject))
+
+```
+
+Merge qualitative and categorical datasets:
+
+```{r merge}
+
+# Note: Experiment 1 (E1_IT.csv) already contains both qualitative and categorical data
+
+# Experiment 2:
+E2_cats <- select(E2_cats, Subject, Condition, AxisChoice) %>% spread(key = 'Condition', value = 'AxisChoice')
+E2_qual <- left_join(E2_cats, E2_qual)
+
+# Experiment 3:
+E3_qual <- left_join(E3_cats, E3_qual)
+
+```
+
+Combine 'Maths' and 'Number' columns:
+
+```{r math_num}
+
+# Experiment 1:
+E1_qual <- mutate(E1_qual,
+	TimeAllMath = ifelse(TimeMaths == 'yes' | TimeNumber == 'yes', 'yes', 'no'),
+	QuantityAllMath = ifelse(QuantityMaths == 'yes' | QuantityNumbers == 'yes', 'yes', 'no'),
+	ValenceAllMath = ifelse(ValenceMaths == 'yes' | ValenceNumber == 'yes', 'yes', 'no'))
+
+# Experiment 2:
+E2_qual <- mutate(E2_qual,
+	TimeAllMath = ifelse(TimeMaths == 'yes' | TimeNumber == 'yes', 'yes', 'no'),
+	QuantityAllMath = ifelse(QuantityMaths == 'yes' | QuantityNumbers == 'yes', 'yes', 'no'),
+	ValenceAllMath = ifelse(ValenceMaths == 'yes' | ValenceNumber == 'yes', 'yes', 'no'))
+
+```
+
+## Experiment 1
+
+Find out how many people mentioned timelines, clocks, maths etc. for time task:
+
+```{r time_E1}
+
+# Overall:
+select(E1_qual, TimeTimeline:TimeOther) %>% apply(2, table)
+
+# Timeline:
+(xtab <- table(E1_qual$TimeTimeline))
+prop.table(xtab) * 100
+
+# Writing:
+(xtab <- table(E1_qual$TimeWriting))
+prop.table(xtab) * 100
+
+# AllMath:
+(xtab <- table(E1_qual$TimeAllMath))
+prop.table(xtab) * 100
+
+```
+
+Find out how many people mentioned timelines, clocks, maths etc. for quantity task:
+
+```{r quantity_E1}
+
+# Overall:
+select(E1_qual, QuantityTimeline:QuantityOther) %>% apply(2, table)
+
+# AllMath:
+(xtab <- table(E1_qual$QuantityAllMath))
+prop.table(xtab) * 100
+
+# Writing:
+(xtab <- table(E1_qual$QuantityWriting))
+prop.table(xtab) * 100
+
+# Environmental:
+(xtab <- table(E1_qual$QuantityEnvironment))
+prop.table(xtab) * 100
+
+```
+
+Find out how many people mentioned timelines, clocks, maths etc. for valence task:
+
+```{r valence_E1}
+
+# Overall:
+select(E1_qual, ValenceTimeline:ValenceOther) %>% apply(2, table)
+
+# Writing:
+(xtab <- table(E1_qual$ValenceWriting))
+prop.table(xtab) * 100
+
+# AllMath:
+(xtab <- table(E1_qual$ValenceAllMath))
+prop.table(xtab) * 100
+
+```
+
+Correlate qualitative responses with categorical axis choices:
+
+```{r qualcat_E1}
+
+# Timeline column for Time task:
+with(E1_qual, table(TimeTimeline, TimeAxis))
+prop.table(with(E1_qual, table(TimeTimeline, TimeAxis)), 1) * 100
+
+# Maths column for Quantity task:
+with(E1_qual, table(QuantityMaths, QuantityAxis))
+prop.table(with(E1_qual, table(QuantityMaths, QuantityAxis)), 1) * 100
+
+# Environment column for Quantity task:
+with(E1_qual, table(QuantityEnvironment, QuantityAxis))
+prop.table(with(E1_qual, table(QuantityEnvironment, QuantityAxis)), 1) * 100
+
+# AllMath column for Valence task:
+with(E1_qual, table(ValenceAllMath, ValenceAxis))
+prop.table(with(E1_qual, table(ValenceAllMath, ValenceAxis)), 1) * 100
+
+```
+
+Clean interview data for word count analysis (e.g., remove symbols):
+
+```{r clean_E1}
+
+E1_qual <- mutate(E1_qual,
+	TimeInterview = str_to_lower(TimeInterview),
+	QuantityInterview = str_to_lower(QuantityInterview),
+	ValenceInterview = str_to_lower(ValenceInterview)) %>%
+	mutate(TimeInterview = str_replace_all(TimeInterview, '[^[:alnum:]]', ' '),
+		QuantityInterview = str_replace_all(QuantityInterview, '[^[:alnum:]]', ' '),
+		ValenceInterview = str_replace_all(ValenceInterview, '[^[:alnum:]]', ' '))
+
+```
+
+Count words:
+
+```{r count_E1}
+
+# Time:
+time_count <- E1_qual %>% unnest_tokens(TimeInterview, TimeInterview) %>%
+	count(Subject) %>% rename(time_n = n)
+
+# Quantity:
+quantity_count <- E1_qual %>% unnest_tokens(QuantityInterview, QuantityInterview) %>%
+	count(Subject) %>% rename(quantity_n = n)
+
+# Valence:
+valence_count <- E1_qual %>% unnest_tokens(ValenceInterview, ValenceInterview) %>%
+	count(Subject) %>% rename(valence_n = n)
+
+# Join 
+E1_counts <- left_join(time_count, quantity_count) %>% left_join(valence_count) %>%
+	gather('Type', 'Count', -Subject)
+
+# Analyse:
+summary(E1.count.afex <- mixed(Count ~ Type + (1|Subject),
+	data = E1_counts, family = 'poisson', method = 'LRT'))
+E1.count.afex
+E1_counts %>% group_by(Type) %>% summarize(n = mean(Count))
+
+```
+
+## Experiment 2
+
+Find out how many people mentioned timelines, clocks, maths etc. for time task:
+
+```{r time_E2}
+
+# Overall:
+select(E2_qual, TimeTimeline:TimeOther) %>% apply(2, table)
+
+# Timeline:
+(xtab <- table(E2_qual$TimeTimeline))
+prop.table(xtab) * 100
+
+# Writing:
+(xtab <- table(E2_qual$TimeWriting))
+prop.table(xtab) * 100
+
+# BackFront:
+(xtab <- table(E2_qual$TimeBackFront))
+
+# AllMath:
+(xtab <- table(E2_qual$TimeAllMath))
+prop.table(xtab) * 100
+
+```
+
+Find out how many people mentioned timelines, clocks, maths etc. for quantity task:
+
+```{r quantity_E2}
+
+# Overall:
+select(E2_qual, QuantityTimeline:QuantityOther) %>% apply(2, table)
+
+# Timeline:
+(xtab <- table(E2_qual$QuantityTimeline))
+prop.table(xtab) * 100
+
+# Writing:
+(xtab <- table(E2_qual$QuantityWriting))
+prop.table(xtab) * 100
+
+# Environment:
+(xtab <- table(E2_qual$QuantityEnvironment))
+prop.table(xtab) * 100
+
+# AllMath:
+(xtab <- table(E2_qual$QuantityAllMath))
+prop.table(xtab) * 100
+
+```
+
+Find out how many people mentioned timelines, clocks, maths etc. for valence task:
+
+```{r valence_E2}
+
+# Overall:
+select(E2_qual, ValenceTimeline:ValenceOther) %>% apply(2, table)
+
+# Timeline:
+(xtab <- table(E2_qual$ValenceTimeline))
+prop.table(xtab) * 100
+
+# BackFront:
+(xtab <- table(E2_qual$ValenceBackFront))
+prop.table(xtab) * 100
+
+# AllMath:
+(xtab <- table(E2_qual$ValenceAllMath))
+prop.table(xtab) * 100
+
+# Writing:
+(xtab <- table(E2_qual$ValenceWriting))
+prop.table(xtab) * 100
+
+```
+
+Correlate qualitative responses with categorical axis choices:
+
+```{r qualcat_E2}
+
+# Timeline column for Time task:
+with(E2_qual, table(TimeTimeline, Time))
+prop.table(with(E1_qual, table(TimeTimeline, TimeAxis)), 1) * 100
+
+# The percentages need adjustment for the baseline (some are not counted as having a consistent axis):
+
+horzs_timeline_yes <- with(E2_qual, table(TimeTimeline, Time))[2, 2]
+horzs_timeline_yes / table(E2_qual$TimeTimeline)[2]
+
+horzs_timeline_no <- with(E2_qual, table(TimeTimeline, Time))[1, 2]
+horzs_timeline_no / table(E2_qual$TimeTimeline)[1]
+
+# Environment column for Quantity task:
+with(E2_qual, table(QuantityEnvironment, Quantity))
+prop.table(with(E2_qual, table(QuantityEnvironment, Quantity)), 1) * 100
+
+# The percentages need adjustment for the baseline (some are not counted as having a consistent axis):
+
+verts_no_env <- with(E2_qual, table(QuantityEnvironment, Quantity))[, 3][1]
+verts_no_env / table(E2_qual$QuantityEnvironment)[1]
+
+
+```
+
+Clean interview data for word count analysis (e.g., remove symbols):
+
+```{r clean_E2}
+
+E2_qual <- mutate(E2_qual,
+	TimeInterview = str_to_lower(TimeInterview),
+	QuantityInterview = str_to_lower(QuantityInterview),
+	ValenceInterview = str_to_lower(ValenceInterview)) %>%
+	mutate(TimeInterview = str_replace_all(TimeInterview, '[^[:alnum:]]', ' '),
+		QuantityInterview = str_replace_all(QuantityInterview, '[^[:alnum:]]', ' '),
+		ValenceInterview = str_replace_all(ValenceInterview, '[^[:alnum:]]', ' '))
+
+```
+
+Count words:
+
+```{r count_E2}
+
+# Time:
+time_count <- E2_qual %>% unnest_tokens(TimeInterview, TimeInterview) %>%
+	count(Subject) %>% rename(time_n = n)
+
+# Quantity:
+quantity_count <- E2_qual %>% unnest_tokens(QuantityInterview, QuantityInterview) %>%
+	count(Subject) %>% rename(quantity_n = n)
+
+# Valence:
+valence_count <- E2_qual %>% unnest_tokens(ValenceInterview, ValenceInterview) %>%
+	count(Subject) %>% rename(valence_n = n)
+
+# Join 
+E2_counts <- left_join(time_count, quantity_count) %>% left_join(valence_count) %>%
+	gather('Type', 'Count', -Subject)
+
+
+# Analyse:
+summary(E2.count.afex <- mixed(Count ~ Type + (1|Subject),
+	data = E2_counts, family = 'poisson', method = 'LRT'))
+E2.count.afex
+E2_counts %>% group_by(Type) %>% summarize(n = mean(Count))
+
+```
+
+## Experiment 3
+
+Find out how many people mentioned timelines, clocks, maths etc.
+
+```{r E3}
+
+# Overall:
+select(E3_qual, Timeline:Other) %>% apply(2, table)
+
+# Timeline:
+(xtab <- table(E3_qual$Timeline))
+prop.table(xtab) * 100
+
+# NumberLine:
+(xtab <- table(E3_qual$NumberLine))
+prop.table(xtab) * 100
+
+# Writing:
+(xtab <- table(E3_qual$Writing))
+prop.table(xtab) * 100
+
+# Maths:
+(xtab <- table(E3_qual$Maths))
+prop.table(xtab) * 100
+
+```
+
+Correlate qualitative responses with categorical axis choices:
+
+```{r qualcat_E3}
+
+# Timeline:
+filter(E3_qual, Representation %in% c("Diagonal", "Horizontal", "Vertical")) %>%
+  with(table(Timeline, Representation))
+prop.table(with(E3_qual, table(Timeline, Representation)), 1) * 100
+
+```

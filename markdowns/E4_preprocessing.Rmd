@@ -1,0 +1,297 @@
+---
+title: "Preprocessing Experiment 4 data"
+author: "Bodo Winter & Greg Woodin"
+date: "10/5/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Preprocessing of Qualtrics data
+
+Start loading in libraries:
+
+```{r libraries, message = FALSE}
+library(tidyverse)
+library(stringr)
+library(reshape2)
+```
+
+Load in the data:
+
+```{r load_data, message = FALSE}
+df <- read_csv('../data/quantitative_data/E4_data.csv')
+df %>% print(n = 3)
+```
+
+Remove extraneous rows:
+
+```{r row_remove}
+df <- df[-c(1, 2), ]
+```
+
+Qualtrics is wide format. Let's format this into long format:
+
+```{r wide_to_long}
+df <- gather(df,
+             Quan1_1_x:Num24_4_y,
+             key = 'Condition', value = 'Pixel')
+```
+
+If a specific randomization order wasn't seen by a participant, it's still indicated, but with an NA. Let's get rid of those (0 responses that the participant didn't see).
+
+```{r rid_NAs}
+df <- filter(df, !is.na(Pixel))
+```
+
+For each question, we used an identifier code that contained information about the type of task and the specific order. Qualtrics then added an _x or _y for the specific axes. This information needs to be separated.
+
+```{r sep_conds}
+df <- separate(df,
+               Condition, into = c('Type', 'Order', 'Axis'))
+```
+
+The randomization is numerical and part of the Type column.
+
+```{r extract_randomization}
+df <- mutate(df,
+  Random = str_extract(Type, '[0-9]+'))
+```
+
+Rename some of the lengthy columns:
+
+```{r rename_cols}
+df <- rename(df,
+             ID = ResponseId, Dur = `Duration (in seconds)`)
+```
+
+Arrange the tibble in a way that makes sense conceptually (away from the specific randomization order towards least-less-more-most etc.):
+
+```{r rearrange}
+df <- arrange(df,
+              ID, Type, Random, Order)
+```
+
+Make the ResponseIDs (subject identifiers) into something shorter:
+
+```{r sub_id_shortener}
+unique_IDs <- unique(df$ID)
+new_IDs <- str_c('S', 1:length(unique_IDs))
+df$ID <- new_IDs[match(df$ID, unique_IDs)]
+```
+
+Make pixels into a numeric column:
+
+```{r pixel_to_num}
+df <- mutate(df,
+             Pixel = as.numeric(Pixel))
+```
+
+Shorten the type column information from Time to T, from Valence to V etc. Then create a unique identifier (time / order combinations), which we will use later for matching.
+
+```{r shorten_type_random_unique_id}
+df <- mutate(df,
+             Type = str_sub(Type, 1, 1),
+             UniqueRandom = str_c(Type, Random, '_', Order))
+```
+
+## Checking misclick responses
+
+Check misclick question responses:
+
+```{r check_misclicks}
+unique(df$Misclicking)
+```
+
+Create vectors for excluding the following:
+
+```{r excl_misclick_vecs}
+num_excl <- c("Yes, I mis-clicked on the tasks with the numbers.",
+              "Yes. I mis-clicked the 4 so I switched the 4 and the 2")
+
+time_excl <- c("this earlier and earliest and later latest to the task")
+
+val_excl <- c("Yes, the second task when I mixed up \"worse\" and \"worst\"",
+"I think it was the one with worse after best. I would've spaced them differently if I'd reviewed the list before clicking in the circle.",
+"the best, better, worst and worse one. I accidentally clicked the \"worst\" click not close enough to the outer edge of the circle.")
+
+total_excl <- c("I think I may have misunderstood the instructions.",
+"YES",
+"I clicked on the words but nothing happened. I then clicked within the circle at random",
+"I truthfully did not notice whatsoever.  I thought I was continuing on with the same task as directed initially and did not notice that the directions had changed.  My apologies, I will pay more attention.",
+"So—how do you know when sending an email is the most effective way of ... How should you decide what style of writing is appropriate for each task? ... in an earlier message, provide some kind of proof (for example, proof that you have ... than a yes/no answer or simple explanation, you should schedule a meeting instead..............")
+```
+
+Exclude those!
+
+```{r exclude_misclicks}
+df <- filter(df, !(Misclicking %in% total_excl))
+df <- filter(df, !((Misclicking %in% val_excl) & (Type == 'V')))
+df <- filter(df, !((Misclicking %in% time_excl) & (Type == 'T')))
+df <- filter(df, !((Misclicking %in% num_excl) & (Type == 'N')))
+```
+
+## Exclusion L2
+
+Exclude those that have Hebrew or Mandarin as their L2 (may have different number mappings):
+
+```{r excl_heb_chin}
+df <- filter(df, !(Language %in% c('Mandarin', 'hebrew')))
+```
+
+Now that we don't need these columns anymore, we can take a subset:
+
+```{r col_select}
+df <- select(df,
+             ID, Type, UniqueRandom, Handedness, Gender, Axis,
+             Pixel, Exp1, Exp2, Exp3, Exp4)
+df %>% print(n = 4, width = Inf)
+```
+
+## Merging order info from Qualtrics script
+
+Load order info:
+
+```{r qualtrics_order, message = FALSE}
+qorder <- read_csv('../data/quantitative_data/E4_qualtrics_order_new.csv')
+qorder %>% print(n = 4, width = Inf)
+```
+
+Separate the information contained in the order columns:
+
+```{r separate_order}
+qorder <- qorder %>%
+  separate(QuantityOrder, into = c('Q1', 'Q2', 'Q3', 'Q4')) %>%
+  separate(TimeOrder, into = c('T1', 'T2', 'T3', 'T4')) %>%
+  separate(ValenceOrder, into = c('V1', 'V2', 'V3', 'V4')) %>%
+  separate(NumbersOrder, into = c('N1', 'N2', 'N3', 'N4'))
+```
+
+Separate this into different tibbles:
+
+```{r sep_orders}
+quant <- select(qorder, Quantity:Q4)
+time <- select(qorder, Time:T4)
+val <- select(qorder, Valence:V4)
+num <- select(qorder, Numbers:N4)
+```
+
+Setup the individual data frames in a similar fashion for easy matching
+
+```{r setup_orders}
+quant <- melt(quant,
+              id.vars = 'Quantity', value.name = 'Resp') %>%
+  arrange(Quantity) %>% as_tibble
+time <- melt(time,
+             id.vars = 'Time', value.name = 'Resp') %>%
+  arrange(Time) %>% as_tibble
+val <- melt(val,
+            id.vars = 'Valence', value.name = 'Resp') %>%
+  arrange(Valence) %>% as_tibble
+num <- melt(num,
+            id.vars = 'Numbers', value.name = 'Resp') %>%
+  arrange(Numbers) %>% as_tibble
+```
+
+Create variable names for matching:
+
+```{r order_create_varnames}
+quant <- mutate(quant,
+                Type = str_sub(Quantity, 1, 1),
+                Random = str_extract(Quantity, '[0-9]+'),
+                Order = str_extract(variable, '[0-9]+'))
+time <- mutate(time,
+               Type = str_sub(Time, 1, 1),
+               Random = str_extract(Time, '[0-9]+'),
+               Order = str_extract(variable, '[0-9]+'))
+val <- mutate(val,
+              Type = str_sub(Valence, 1, 1),
+              Random = str_extract(Valence, '[0-9]+'),
+              Order = str_extract(variable, '[0-9]+'))
+num <- mutate(num,
+              Type = str_sub(Numbers, 1, 1),
+              Random = str_extract(Numbers, '[0-9]+'),
+              Order = str_extract(variable, '[0-9]+'))
+```
+
+Create unique IDs for matching in these tibbles:
+
+```{r order_unique_ID}
+quant <- mutate(quant,
+                UniqueRandom = str_c(Type, Random, '_', Order))
+time <- mutate(time,
+               UniqueRandom = str_c(Type, Random, '_', Order))
+val <- mutate(val,
+              UniqueRandom = str_c(Type, Random, '_', Order))
+num <- mutate(num,
+              UniqueRandom = str_c(Type, Random, '_', Order))
+```
+
+Merge all the order tibbles together again:
+
+```{r merge_orders}
+quant <- select(quant, -1, -2)
+time <- select(time, -1, -2)
+val <- select(val, -1, -2)
+num <- select(num, -1, -2)
+all_orders <- bind_rows(quant, time, val, num)
+```
+
+Add information about whether it is the first, second etc. in ordered sequence. For example, least = first, less, = second, more = third etc., and so on for earliest, earlier etc.
+
+```{r concept_order_create}
+first <- c('least', 'earliest', 'worst', '2')
+second <- c('less', 'earlier', 'worse', '4')
+third <- c('more', 'later', 'better', '7')
+fourth <- c('most', 'latest', 'best', '9')
+
+all_orders <- mutate(all_orders,
+                     ConceptOrder = ifelse(Resp %in% first, 1, Resp),
+                     ConceptOrder = ifelse(ConceptOrder %in% second, 2, ConceptOrder),
+                     ConceptOrder = ifelse(ConceptOrder %in% third, 3, ConceptOrder),
+                     ConceptOrder = ifelse(ConceptOrder %in% fourth, 4, ConceptOrder))
+```
+
+Merge the order and the main data tibble:
+
+```{r merge_data_and_order}
+ids <- match(df$UniqueRandom, all_orders$UniqueRandom)
+df <- bind_cols(df, all_orders[ids, c('Resp', 'ConceptOrder')])
+```
+
+## More processing on final tibble
+
+Sort tibble by ConceptOrder:
+
+```{r sort_final_tibble}
+df <- arrange(df,
+              ID, Type, ConceptOrder)
+```
+
+Rearrange columns of final tibble:
+
+```{r rearrange_cols}
+df <- select(df,
+             ID, Handedness, Gender, Type, ConceptOrder,
+             Resp, Axis, Pixel, Exp1:Exp4)
+```
+
+## Reverse y's
+
+The y-counter on Qualtrics goes from top to bottom. That is, small numbers are at the top of the circle, large numbers are at the bottom. So we need to reverse the axes for ease of interpretation and plotting.
+
+```{r reverse_y}
+# check:
+range(filter(df, Axis == 'y')$Pixel)
+
+# reverse:
+df[df$Axis == 'y', ]$Pixel <- 750 - df[df$Axis == 'y', ]$Pixel
+```
+
+Finally, we can write the file:
+
+```{r write_file}
+write_csv(df, '../data/quantitative_data/E4_processed.csv')
+```
