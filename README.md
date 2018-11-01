@@ -1,4 +1,4 @@
-# placing_abstract_concepts
+# Placing abstract concepts in space: README for analysis
 
 -	**Conceived experiments**: Greg Woodin and Bodo Winter
 -	**Implemented experiments**: Greg Woodin
